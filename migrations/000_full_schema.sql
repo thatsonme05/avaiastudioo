@@ -1,14 +1,5 @@
--- ═══════════════════════════════════════════════════════════
--- Avaia Studio — Complete Supabase Schema
--- Run this once in Supabase → SQL Editor.
--- Safe to re-run: every statement uses IF NOT EXISTS / OR REPLACE,
--- so running it again later won't touch tables that already exist
--- or data that's already there.
--- ═══════════════════════════════════════════════════════════
 
 create extension if not exists pgcrypto;
-
--- CLASSES ------------------------------------------------------
 create table if not exists classes (
   id         uuid primary key default gen_random_uuid(),
   name       text not null,
@@ -18,8 +9,6 @@ create table if not exists classes (
   capacity   integer not null default 12,
   price      integer not null default 0
 );
-
--- SCHEDULE -------------------------------------------------------
 create table if not exists schedule (
   id       uuid primary key default gen_random_uuid(),
   day      text not null,
@@ -27,8 +16,6 @@ create table if not exists schedule (
   time     text not null,
   slots    integer not null default 0
 );
-
--- MEMBERSHIPS (packages for sale on /pricing) ---------------------
 create table if not exists memberships (
   id            uuid primary key default gen_random_uuid(),
   name          text not null,
@@ -39,8 +26,6 @@ create table if not exists memberships (
   features      text[] default '{}',
   status        text not null default 'active'
 );
-
--- MEMBERS (profile row — id matches the Supabase Auth user id) ---
 create table if not exists members (
   id              uuid primary key,
   name            text not null,
@@ -50,10 +35,6 @@ create table if not exists members (
   membership_type text default 'drop-in',
   status          text not null default 'active'
 );
-
--- BOOKINGS ---------------------------------------------------------
--- id is text, not uuid — it's either a Midtrans order id or a short
--- "b########" id from Excel import, set by the app itself.
 create table if not exists bookings (
   id                text primary key,
   name              text not null,
@@ -72,8 +53,6 @@ create table if not exists bookings (
   paid_at           timestamptz,
   created_at        timestamptz not null default now()
 );
-
--- PENDING_BOOKINGS (created on checkout, removed once paid) --------
 create table if not exists pending_bookings (
   id          text primary key,
   name        text not null,
@@ -89,8 +68,6 @@ create table if not exists pending_bookings (
   amount      integer default 0,
   created_at  timestamptz not null default now()
 );
-
--- MEMBER_PACKAGES (a member's active, paid-for package) -------------
 create table if not exists member_packages (
   id            uuid primary key default gen_random_uuid(),
   member_id     uuid references members(id) on delete cascade,
@@ -105,8 +82,6 @@ create table if not exists member_packages (
   expires_at    timestamptz,
   status        text not null default 'active'
 );
-
--- PENDING_PACKAGE_PURCHASES (created on checkout, removed once paid) -
 create table if not exists pending_package_purchases (
   id            text primary key,
   member_id     uuid references members(id) on delete set null,
@@ -122,7 +97,6 @@ create table if not exists pending_package_purchases (
   created_at    timestamptz not null default now()
 );
 
--- FEEDBACK -----------------------------------------------------------
 create table if not exists feedback (
   id         uuid primary key default gen_random_uuid(),
   name       text default 'Anonymous',
@@ -133,10 +107,6 @@ create table if not exists feedback (
   status     text not null default 'unread',
   created_at timestamptz not null default now()
 );
-
--- NOTIFICATIONS (admin bell icon) --------------------------------------
--- Quoted, camelCase column names — this matches the exact keys the
--- app sends (lib/notify.js), so leave the quotes as-is.
 create table if not exists notifications (
   id            uuid primary key default gen_random_uuid(),
   audience      text not null,
@@ -149,9 +119,6 @@ create table if not exists notifications (
   read          boolean not null default false,
   created_at    timestamptz not null default now()
 );
-
--- SETTINGS (single row of studio configuration) --------------------------
--- Also quoted camelCase, matching the app's settings object exactly.
 create table if not exists settings (
   id             int primary key default 1,
   "studioName"   text default 'Avaia Studio',
@@ -174,10 +141,6 @@ create table if not exists settings (
   constraint settings_single_row check (id = 1)
 );
 insert into settings (id) values (1) on conflict (id) do nothing;
-
--- FUNCTIONS ------------------------------------------------------------
--- Atomic slot adjustment — avoids a race condition where two people
--- booking the same slot at the same instant could both succeed.
 create or replace function decrement_slots(sched_id uuid)
 returns void as $$
 begin
@@ -191,13 +154,6 @@ begin
   update schedule set slots = slots + 1 where id = sched_id;
 end;
 $$ language plpgsql;
-
--- SECURITY ---------------------------------------------------------------
--- The app talks to Supabase using the secret key, which bypasses RLS —
--- so the app itself doesn't depend on these policies. Enabling RLS with
--- no permissive policies just means the anon/publishable key (if it ever
--- leaked, or if you add client-side Supabase access later) can't read or
--- write anything by default. Defense in depth, not something the app needs.
 alter table classes                     enable row level security;
 alter table schedule                    enable row level security;
 alter table memberships                 enable row level security;

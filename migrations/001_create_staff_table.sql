@@ -1,7 +1,3 @@
--- Run this once in Supabase → SQL Editor.
--- Creates the staff table (admin & instructor accounts) and seeds the
--- default admin login so you can still get into /admin after migrating.
-
 create table if not exists staff (
   id          uuid primary key default gen_random_uuid(),
   name        text not null,
@@ -14,9 +10,6 @@ create table if not exists staff (
   status      text not null default 'active' check (status in ('active','inactive')),
   created_at  timestamptz not null default now()
 );
-
--- Default admin login: username "admin@gmail.com", password "admin123".
--- Change this password from Admin → Security as soon as you log in.
 insert into staff (name, username, password, role, status)
 values (
   'Administrator',
@@ -26,9 +19,4 @@ values (
   'active'
 )
 on conflict (username) do nothing;
-
--- Row Level Security: the app talks to this table using the Supabase secret
--- key (which bypasses RLS), so policies here are a defense-in-depth backstop,
--- not what the app itself relies on. Enabling RLS with no public policies
--- means anon/publishable-key access is blocked entirely by default.
 alter table staff enable row level security;
