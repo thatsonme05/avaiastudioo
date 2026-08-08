@@ -1,0 +1,396 @@
+/* ═══════════════════════════════════════
+   AVAIA STUDIO — i18n.js
+   Simple dictionary-based EN/ID language switch.
+   Load this BEFORE core.js on every page.
+═══════════════════════════════════════ */
+
+const I18N = {
+  en: {
+    // Nav
+    'nav.home':'Home', 'nav.schedule':'Schedule', 'nav.classes':'Classes',
+    'nav.membership':'Membership', 'nav.pricing':'Pricing', 'nav.about':'About Us', 'nav.about.short':'About',
+    'nav.locate':'Locate Us', 'nav.feedback':'Feedback',
+    'nav.signin':'Sign In', 'nav.signout':'Sign Out', 'nav.dashboard':'Dashboard',
+    'nav.loginsignup':'Login / Sign Up',
+    // Notifications
+    'notif.title':'Notifications', 'notif.markallread':'Mark all as read',
+    'notif.loading':'Loading...', 'notif.empty':'No notifications yet.',
+    // Footer
+    'footer.desc':'A boutique yoga studio with a personal, attentive approach.',
+    'footer.pages':'Pages', 'footer.contact':'Contact', 'footer.location':'Palu, Indonesia',
+    'footer.bookingpolicy':'Booking Policy', 'footer.cancelpolicy':'Cancellation Policy',
+    'footer.membershippolicy':'Membership Policy', 'footer.houserules':'House Rules',
+    'footer.terms':'Terms & Conditions',
+    // Login modal
+    'modal.login.title':'Sign in to your account', 'modal.login.email':'Email',
+    'modal.login.password':'Password', 'modal.login.submit':'Sign In',
+    'modal.login.noaccount':"Don't have an account?", 'modal.login.signup':'Sign up now',
+    // Register modal
+    'modal.register.eyebrow':'Join Us', 'modal.register.title':'Create a Member Account',
+    'modal.register.subtitle':'Access the schedule, bookings, class history, and your membership.',
+    'modal.register.firstname':'First Name', 'modal.register.lastname':'Last Name',
+    'modal.register.email':'Email', 'modal.register.whatsapp':'WhatsApp',
+    'modal.register.password':'Password', 'modal.register.confirmpassword':'Confirm Password',
+    'modal.register.submit':'Create Account', 'modal.register.hasaccount':'Already have an account?',
+    'modal.register.signin':'Sign in here', 'modal.register.created':'Account Created',
+    'modal.register.startbooking':'Start Booking',
+    // Booking modal
+    'modal.booking.eyebrow':'Class Reservation', 'modal.booking.date':'Date',
+    'modal.booking.time':'Time', 'modal.booking.price':'Price',
+    'modal.booking.firstname':'First Name', 'modal.booking.lastname':'Last Name',
+    'modal.booking.email':'Email', 'modal.booking.whatsapp':'WhatsApp Number',
+    'modal.booking.note':'Note (optional)', 'modal.booking.noteph':'Injury, pregnancy, etc.',
+    'modal.booking.payinfo':'Payment will be processed via Midtrans (QRIS, GoPay, OVO, Bank Transfer, etc.)',
+    'modal.booking.continue':'Continue to Payment', 'modal.booking.confirmed':'Booking Confirmed!',
+    'modal.booking.close':'Close',
+    // Package modal
+    'modal.package.eyebrow':'Membership Package', 'modal.package.price':'Price',
+    'modal.package.paynow':'Pay Now', 'modal.package.purchased':'Package Purchased!',
+    'modal.package.godashboard':'Go to Dashboard',
+    'modal.package.simnote':'Simulation mode — configure Midtrans for real payments.',
+    // Shared toasts / messages
+    'msg.enteremailpass':'Please enter your email/username and password.',
+    'msg.welcomeback':'Welcome back,',
+    'msg.wrongcreds':'Incorrect email/username or password.',
+    'msg.connerror':'Could not connect to the server.',
+    'msg.nameemailpassrequired':'Name, email, and password are required.',
+    'msg.passwordsnomatch':'Passwords do not match.',
+    'msg.password8':'Password must be at least 8 characters.',
+    'msg.welcome':'Welcome,',
+    'msg.registeredwith':'! Your account has been registered with Avaia Studio.',
+    'msg.registrationfailed':'Registration failed.',
+    'msg.signedout':'You have been signed out.',
+    'msg.somethingwrong':'Something went wrong.',
+    'msg.paymentcancelled':'Payment cancelled.',
+    'msg.signinfirst':'Please sign in first to purchase a package.',
+    'msg.failedtransaction':'Failed to create transaction.',
+    'msg.simnote2':'Simulation mode active.',
+    'msg.simnote3':'Configure Midtrans in .env for real payments.',
+    'msg.paymentvia':'Payment via Midtrans: QRIS, GoPay, OVO, Bank Transfer, Credit Card, Indomaret, etc.',
+    'unit.creditvalid':'class credit(s) · valid for',
+    'unit.daysfrompurchase':'days from purchase',
+    // Home page
+    'home.happeningtoday':'Happening Today', 'home.todaysschedule':"Today's Schedule",
+    'home.fullschedule':'Full Schedule', 'home.whatweoffer':'What we offer',
+    'home.featuredclasses':'Featured Classes', 'home.seeall':'See all',
+    'home.getstarted':'Get started', 'home.readytostart':'Ready to start your yoga journey?',
+    'home.ctadesc':'Sign up as a member, book classes, and track your yoga journey.',
+    'home.becomemember':'Become a Member', 'home.viewschedule':'View Schedule',
+    'home.noclassestoday':'No classes scheduled today.', 'home.viewfullschedule':'View the full schedule',
+    'home.fordaysother':'for other days.', 'home.failedtoload':"Failed to load today's schedule.",
+    'home.book':'Book', 'home.full':'Full', 'home.spotsleft':'spots left',
+    'home.slide1.title':'Avaia Studio', 'home.slide1.sub':'Move. Breathe. Belong',
+    'home.slide2.title':'Find Your Balance', 'home.slide2.sub':'A space to pause, reconnect, and move with purpose',
+    'home.slide3.title':'Wellness, One Practice at a Time.',
+    'home.slide3.sub':'Creating meaningful movement and a welcoming community for every body',
+    // About page
+    'about.eyebrow':'About Us', 'about.title':'A yoga studio with a personal approach',
+    'about.ourstory':'Our Story', 'about.storytitle':"Yoga isn't about<br>a perfect posture",
+    'about.joinnow':'Join Now', 'about.viewclasses':'View Classes',
+    'about.ourvalues':'Our Values', 'about.whychoose':'Why choose Avaia',
+    'about.val1.t':'Certified Instructors', 'about.val1.d':'certified instructors & well-experienced.',
+    'about.val2.t':'Small, Personal Classes', 'about.val2.d':'Max 12–18 people so every student gets full attention.',
+    'about.val3.t':'Premium Facilities', 'about.val3.d':'Yoga essential, air conditioning, changing rooms, and lockers available.',
+    'about.val4.t':'Flexible Schedule', 'about.val4.d':'12+ sessions per week from 07:00 AM to 21:00 PM.',
+    'about.val5.t':'All Levels Welcome', 'about.val5.d':'Classes for beginners through experienced practitioners.',
+    'about.val6.t':'A Warm Community', 'about.val6.d':'bringing all wellness community in Palu to sharing good energy.',
+    // Schedule page
+    'schedule.eyebrow':'Class schedule', 'schedule.title':'Choose a time that works for you',
+    'schedule.subtitle':'Click the <strong>Book</strong> button to reserve — saved directly to the database',
+    'schedule.live':'Live — slots update automatically',
+    'schedule.time':'Time', 'schedule.class':'Class', 'schedule.level':'Level',
+    'schedule.duration':'Duration', 'schedule.price':'Price', 'schedule.slotsleft':'Slots Left',
+    'schedule.loading':'Loading schedule...', 'schedule.today':'Today',
+    'schedule.noclasses':'No classes today.', 'schedule.failedload':'Failed to load schedule.',
+    'schedule.full':'Full', 'schedule.almostfull':'almost full', 'schedule.spots':'spots',
+    'schedule.book':'Book',
+    'schedule.instructor':'Instructor', 'schedule.leveldiff':'Level of difficulty',
+    // Classes page
+    'classes.eyebrow':'Our studio', 'classes.title':'All classes',
+    'classes.filter.all':'All', 'classes.filter.alllevels':'All Levels', 'classes.filter.beginner':'Beginner',
+    'classes.capacity':'Capacity', 'classes.people':'people', 'classes.viewschedule':'View Schedule',
+    'classes.noclasses':'No classes yet.', 'classes.failedload':'Failed to load.',
+    // Pricing page
+    'pricing.eyebrow':'Membership', 'pricing.title':'Choose your plan',
+    'pricing.getstarted':'Get Started', 'pricing.signupbook':'Sign Up & Book',
+    'pricing.notavailable':'This package is not available for purchase yet. Please contact the studio directly.',
+    'pricing.subtitle':'All packages include full access to our studio facilities. No hidden fees.',
+    'pricing.comparison':'Package Comparison', 'pricing.feature':'Feature',
+    'pricing.numclasses':'Number of classes', 'pricing.priceperclass':'Price per class',
+    'pricing.validityperiod':'Validity period', 'pricing.bestfor':'Best for',
+    'pricing.singleuse':'Single use', 'pricing.7days':'7 days', 'pricing.1month':'1 month',
+    'pricing.tryclass':'Trying a class', 'pricing.firsttimevisit':'First-time visitors',
+    'pricing.regularpractice':'Regular practice', 'pricing.committedpractice':'Committed practice',
+    'pricing.faq':'FAQ', 'pricing.faqtitle':'Frequently Asked Questions',
+    'pricing.faq1.q':'Is there a minimum contract?',
+    'pricing.faq1.a':"No contracts here — all our packages are pay-as-you-go. Simply purchase again whenever you're ready for more classes.",
+    'pricing.faq2.q':'How do I book a class?',
+    'pricing.faq2.a':'Create an account, then go to the Schedule page and tap Book. Your details are filled in automatically.',
+    'pricing.faq3.q':'How far in advance can I book?',
+    'pricing.faq3.a':'Bookings open 7 days ahead and close 2 hours before the class starts, subject to availability.',
+    'pricing.faq4.q':'Is there a free trial class?',
+    'pricing.faq4.a':'Yes! New members get their first Foundations class free. Just sign up and book.',
+    'pricing.tag.tryitout':'Try It Out', 'pricing.tag.newmember':'New Member Offer',
+    'pricing.tag.monthly':'Monthly', 'pricing.tag.popular':'Most Popular',
+    'pricing.pkg1.name':'Single Class', 'pricing.pkg1.feat1':'1 class of your choice',
+    'pricing.pkg2.name':'First Timer', 'pricing.pkg2.feat1':'3 classes to explore',
+    'pricing.pkg2.feat2':'Best for first-time visitors',
+    'pricing.pkg3.name':'5 Classes', 'pricing.pkg3.feat1':'5 classes per month',
+    'pricing.pkg3.feat2':'Flexible scheduling',
+    'pricing.pkg4.name':'10 Classes', 'pricing.pkg4.feat1':'10 classes per month',
+    'pricing.pkg4.feat2':'Best value per class', 'pricing.pkg4.feat3':'Priority booking',
+    'pricing.feataccess':'Access to all facilities', 'pricing.featmat':'Mat provided',
+    'pricing.featonline':'Online booking',
+    // Locate page
+    'locate.eyebrow':'Find Us', 'locate.title':'Visit our studio',
+    'locate.address':'Address', 'locate.phone':'Phone', 'locate.email':'Email', 'locate.hours':'Hours',
+    'locate.visitus':'Visit Us', 'locate.findstudio':'Find our studio',
+    'locate.information':'Information', 'locate.addresscontact':'Address &<br>Contact',
+    'locate.openinghours':'Opening Hours',
+    'locate.privatevehicle':'Private Vehicle', 'locate.privatevehicledesc':'Parking is available in front of the studio. Free for members.',
+    'locate.ridehailing':'Ride-Hailing', 'locate.ridehailingdesc':'Search on Gojek or Grab. Drop-off zone is right at the entrance.',
+    // Feedback page
+    'feedback.eyebrow':'Your voice matters', 'feedback.title':'Feedback',
+    'feedback.sharetitle':'Share your thoughts',
+    'feedback.subtitle':'All your feedback is read directly by the Avaia Studio team.',
+    'feedback.name':'Name (optional)', 'feedback.email':'Email (optional)',
+    'feedback.type':'Feedback Type', 'feedback.suggestion':'Suggestion', 'feedback.criticism':'Criticism',
+    'feedback.question':'Question', 'feedback.compliment':'Compliment',
+    'feedback.rating':'Rate Your Experience', 'feedback.selectrating':'Select a rating',
+    'feedback.message':'Message', 'feedback.messageph':'Write your criticism, suggestion, or question...',
+    'feedback.send':'Send Feedback', 'feedback.thankyou':'Thank you!',
+    'feedback.received':"We've received your feedback and our team will review it.",
+    'feedback.sendmore':'Send More Feedback', 'feedback.whymatters':'Why your feedback matters',
+    'feedback.whydesc':"Avaia Studio keeps improving thanks to feedback from our members and guests. Every suggestion is considered to help us improve our service quality.",
+    'feedback.directcontact':'Direct Contact', 'feedback.servicehours':'Service Hours',
+    'feedback.msgrequired':'Message cannot be empty.', 'feedback.failedsend':'Failed to send.',
+    'fb.r1':'Very Poor', 'fb.r2':'Poor', 'fb.r3':'Fair', 'fb.r4':'Good', 'fb.r5':'Excellent',
+    // Booking/package confirmation flow
+    'msg.fillbookingfields':'Please fill in your name, email, and WhatsApp number.',
+    'msg.processing':'Processing...',
+    'msg.bookingfor':'your booking for', 'msg.on':'on', 'msg.at':'at',
+    'msg.confirmedusingcredit':'has been confirmed using 1 class credit from your',
+    'msg.package':'package.', 'msg.creditsleft':'credit(s) left.',
+    'msg.confirmedsaved':'has been confirmed and saved to the database.',
+    'msg.simmodenote':'Simulation mode — configure Midtrans for real payments.',
+    'msg.connectionerror':'Connection error.',
+    'msg.packagenowactive':'package is now active —',
+    'msg.creditsvalidfor':'class credit(s), valid for',
+    'msg.days':'days.',
+    'time.justnow':'Just now', 'time.minago':'min ago', 'time.hrago':'hr ago', 'time.dayago':'day(s) ago',
+  },
+  id: {
+    // Nav
+    'nav.home':'Beranda', 'nav.schedule':'Jadwal', 'nav.classes':'Kelas',
+    'nav.membership':'Membership', 'nav.pricing':'Harga', 'nav.about':'Tentang Kami', 'nav.about.short':'Tentang',
+    'nav.locate':'Lokasi Kami', 'nav.feedback':'Masukan',
+    'nav.signin':'Masuk', 'nav.signout':'Keluar', 'nav.dashboard':'Dasbor',
+    'nav.loginsignup':'Masuk / Daftar',
+    // Notifications
+    'notif.title':'Notifikasi', 'notif.markallread':'Tandai semua dibaca',
+    'notif.loading':'Memuat...', 'notif.empty':'Belum ada notifikasi.',
+    // Footer
+    'footer.desc':'Studio yoga butik dengan pendekatan personal dan penuh perhatian.',
+    'footer.pages':'Halaman', 'footer.contact':'Kontak', 'footer.location':'Palu, Indonesia',
+    'footer.bookingpolicy':'Kebijakan Booking', 'footer.cancelpolicy':'Kebijakan Pembatalan',
+    'footer.membershippolicy':'Kebijakan Membership', 'footer.houserules':'Aturan Studio',
+    'footer.terms':'Syarat & Ketentuan',
+    // Login modal
+    'modal.login.title':'Masuk ke akun Anda', 'modal.login.email':'Email',
+    'modal.login.password':'Kata Sandi', 'modal.login.submit':'Masuk',
+    'modal.login.noaccount':'Belum punya akun?', 'modal.login.signup':'Daftar sekarang',
+    // Register modal
+    'modal.register.eyebrow':'Gabung Bersama Kami', 'modal.register.title':'Buat Akun Member',
+    'modal.register.subtitle':'Akses jadwal, booking, riwayat kelas, dan membership Anda.',
+    'modal.register.firstname':'Nama Depan', 'modal.register.lastname':'Nama Belakang',
+    'modal.register.email':'Email', 'modal.register.whatsapp':'WhatsApp',
+    'modal.register.password':'Kata Sandi', 'modal.register.confirmpassword':'Konfirmasi Kata Sandi',
+    'modal.register.submit':'Buat Akun', 'modal.register.hasaccount':'Sudah punya akun?',
+    'modal.register.signin':'Masuk di sini', 'modal.register.created':'Akun Berhasil Dibuat',
+    'modal.register.startbooking':'Mulai Booking',
+    // Booking modal
+    'modal.booking.eyebrow':'Reservasi Kelas', 'modal.booking.date':'Tanggal',
+    'modal.booking.time':'Waktu', 'modal.booking.price':'Harga',
+    'modal.booking.firstname':'Nama Depan', 'modal.booking.lastname':'Nama Belakang',
+    'modal.booking.email':'Email', 'modal.booking.whatsapp':'Nomor WhatsApp',
+    'modal.booking.note':'Catatan (opsional)', 'modal.booking.noteph':'Cedera, kehamilan, dll.',
+    'modal.booking.payinfo':'Pembayaran akan diproses melalui Midtrans (QRIS, GoPay, OVO, Transfer Bank, dll.)',
+    'modal.booking.continue':'Lanjut ke Pembayaran', 'modal.booking.confirmed':'Booking Dikonfirmasi!',
+    'modal.booking.close':'Tutup',
+    // Package modal
+    'modal.package.eyebrow':'Paket Membership', 'modal.package.price':'Harga',
+    'modal.package.paynow':'Bayar Sekarang', 'modal.package.purchased':'Paket Berhasil Dibeli!',
+    'modal.package.godashboard':'Ke Dasbor',
+    'modal.package.simnote':'Mode simulasi — atur Midtrans untuk pembayaran sungguhan.',
+    // Shared toasts / messages
+    'msg.enteremailpass':'Silakan masukkan email/username dan kata sandi Anda.',
+    'msg.welcomeback':'Selamat datang kembali,',
+    'msg.wrongcreds':'Email/username atau kata sandi salah.',
+    'msg.connerror':'Tidak dapat terhubung ke server.',
+    'msg.nameemailpassrequired':'Nama, email, dan kata sandi wajib diisi.',
+    'msg.passwordsnomatch':'Kata sandi tidak cocok.',
+    'msg.password8':'Kata sandi minimal 8 karakter.',
+    'msg.welcome':'Selamat datang,',
+    'msg.registeredwith':'! Akun Anda telah terdaftar di Avaia Studio.',
+    'msg.registrationfailed':'Pendaftaran gagal.',
+    'msg.signedout':'Anda telah keluar.',
+    'msg.somethingwrong':'Terjadi kesalahan.',
+    'msg.paymentcancelled':'Pembayaran dibatalkan.',
+    'msg.signinfirst':'Silakan masuk terlebih dahulu untuk membeli paket.',
+    'msg.failedtransaction':'Gagal membuat transaksi.',
+    'msg.simnote2':'Mode simulasi aktif.',
+    'msg.simnote3':'Atur Midtrans di .env untuk pembayaran sungguhan.',
+    'msg.paymentvia':'Pembayaran via Midtrans: QRIS, GoPay, OVO, Transfer Bank, Kartu Kredit, Indomaret, dll.',
+    'unit.creditvalid':'kredit kelas · berlaku selama',
+    'unit.daysfrompurchase':'hari sejak pembelian',
+    // Home page
+    'home.happeningtoday':'Hari Ini', 'home.todaysschedule':'Jadwal Hari Ini',
+    'home.fullschedule':'Jadwal Lengkap', 'home.whatweoffer':'Yang kami tawarkan',
+    'home.featuredclasses':'Kelas Unggulan', 'home.seeall':'Lihat semua',
+    'home.getstarted':'Mulai sekarang', 'home.readytostart':'Siap memulai perjalanan yoga Anda?',
+    'home.ctadesc':'Daftar sebagai member, booking kelas, dan pantau perjalanan yoga Anda.',
+    'home.becomemember':'Jadi Member', 'home.viewschedule':'Lihat Jadwal',
+    'home.noclassestoday':'Tidak ada kelas terjadwal hari ini.', 'home.viewfullschedule':'Lihat jadwal lengkap',
+    'home.fordaysother':'untuk hari lainnya.', 'home.failedtoload':'Gagal memuat jadwal hari ini.',
+    'home.book':'Booking', 'home.full':'Penuh', 'home.spotsleft':'tempat tersisa',
+    'home.slide1.title':'Avaia Studio', 'home.slide1.sub':'Gerak. Napas. Kebersamaan',
+    'home.slide2.title':'Temukan Keseimbangan Anda', 'home.slide2.sub':'Ruang untuk jeda, terhubung kembali, dan bergerak dengan tujuan',
+    'home.slide3.title':'Kesehatan, Satu Latihan dalam Satu Waktu.',
+    'home.slide3.sub':'Menciptakan gerakan bermakna dan komunitas yang hangat untuk semua orang',
+    // About page
+    'about.eyebrow':'Tentang Kami', 'about.title':'Studio yoga dengan pendekatan personal',
+    'about.ourstory':'Kisah Kami', 'about.storytitle':'Yoga bukan soal<br>postur yang sempurna',
+    'about.joinnow':'Gabung Sekarang', 'about.viewclasses':'Lihat Kelas',
+    'about.ourvalues':'Nilai Kami', 'about.whychoose':'Mengapa memilih Avaia',
+    'about.val1.t':'Instruktur Bersertifikat', 'about.val1.d':'instruktur bersertifikat & berpengalaman.',
+    'about.val2.t':'Kelas Kecil & Personal', 'about.val2.d':'Maks 12–18 orang agar setiap peserta mendapat perhatian penuh.',
+    'about.val3.t':'Fasilitas Premium', 'about.val3.d':'Perlengkapan yoga, AC, ruang ganti, dan loker tersedia.',
+    'about.val4.t':'Jadwal Fleksibel', 'about.val4.d':'12+ sesi per minggu dari pukul 07:00 hingga 21:00.',
+    'about.val5.t':'Semua Level Diterima', 'about.val5.d':'Kelas untuk pemula hingga praktisi berpengalaman.',
+    'about.val6.t':'Komunitas yang Hangat', 'about.val6.d':'menyatukan komunitas kebugaran di Palu untuk berbagi energi positif.',
+    // Schedule page
+    'schedule.eyebrow':'Jadwal kelas', 'schedule.title':'Pilih waktu yang sesuai untuk Anda',
+    'schedule.subtitle':'Klik tombol <strong>Booking</strong> untuk memesan — langsung tersimpan ke database',
+    'schedule.live':'Live — slot diperbarui otomatis',
+    'schedule.time':'Waktu', 'schedule.class':'Kelas', 'schedule.level':'Level',
+    'schedule.duration':'Durasi', 'schedule.price':'Harga', 'schedule.slotsleft':'Sisa Slot',
+    'schedule.loading':'Memuat jadwal...', 'schedule.today':'Hari ini',
+    'schedule.noclasses':'Tidak ada kelas hari ini.', 'schedule.failedload':'Gagal memuat jadwal.',
+    'schedule.full':'Penuh', 'schedule.almostfull':'hampir penuh', 'schedule.spots':'slot',
+    'schedule.book':'Booking',
+    'schedule.instructor':'Instruktur', 'schedule.leveldiff':'Tingkat kesulitan',
+    // Classes page
+    'classes.eyebrow':'Studio kami', 'classes.title':'Semua kelas',
+    'classes.filter.all':'Semua', 'classes.filter.alllevels':'Semua Level', 'classes.filter.beginner':'Pemula',
+    'classes.capacity':'Kapasitas', 'classes.people':'orang', 'classes.viewschedule':'Lihat Jadwal',
+    'classes.noclasses':'Belum ada kelas.', 'classes.failedload':'Gagal memuat.',
+    // Pricing page
+    'pricing.eyebrow':'Membership', 'pricing.title':'Pilih paket Anda',
+    'pricing.getstarted':'Mulai Sekarang', 'pricing.signupbook':'Daftar & Booking',
+    'pricing.notavailable':'Paket ini belum tersedia untuk dibeli. Silakan hubungi studio langsung.',
+    'pricing.subtitle':'Semua paket termasuk akses penuh ke fasilitas studio kami. Tanpa biaya tersembunyi.',
+    'pricing.comparison':'Perbandingan Paket', 'pricing.feature':'Fitur',
+    'pricing.numclasses':'Jumlah kelas', 'pricing.priceperclass':'Harga per kelas',
+    'pricing.validityperiod':'Masa berlaku', 'pricing.bestfor':'Cocok untuk',
+    'pricing.singleuse':'Sekali pakai', 'pricing.7days':'7 hari', 'pricing.1month':'1 bulan',
+    'pricing.tryclass':'Mencoba kelas', 'pricing.firsttimevisit':'Pengunjung pertama kali',
+    'pricing.regularpractice':'Latihan rutin', 'pricing.committedpractice':'Latihan intensif',
+    'pricing.faq':'FAQ', 'pricing.faqtitle':'Pertanyaan yang Sering Diajukan',
+    'pricing.faq1.q':'Apakah ada kontrak minimum?',
+    'pricing.faq1.a':'Tidak ada kontrak di sini — semua paket kami bayar sesuai pakai. Cukup beli lagi kapan pun Anda siap untuk kelas berikutnya.',
+    'pricing.faq2.q':'Bagaimana cara booking kelas?',
+    'pricing.faq2.a':'Buat akun, lalu buka halaman Jadwal dan tekan Booking. Data Anda akan terisi otomatis.',
+    'pricing.faq3.q':'Berapa lama sebelumnya saya bisa booking?',
+    'pricing.faq3.a':'Booking dibuka 7 hari sebelumnya dan ditutup 2 jam sebelum kelas dimulai, tergantung ketersediaan.',
+    'pricing.faq4.q':'Apakah ada kelas percobaan gratis?',
+    'pricing.faq4.a':'Ya! Member baru mendapatkan kelas Foundations pertama secara gratis. Cukup daftar dan booking.',
+    'pricing.tag.tryitout':'Coba Dulu', 'pricing.tag.newmember':'Promo Member Baru',
+    'pricing.tag.monthly':'Bulanan', 'pricing.tag.popular':'Paling Populer',
+    'pricing.pkg1.name':'Satu Kelas', 'pricing.pkg1.feat1':'1 kelas pilihan Anda',
+    'pricing.pkg2.name':'Pertama Kali', 'pricing.pkg2.feat1':'3 kelas untuk eksplorasi',
+    'pricing.pkg2.feat2':'Cocok untuk pengunjung pertama kali',
+    'pricing.pkg3.name':'5 Kelas', 'pricing.pkg3.feat1':'5 kelas per bulan',
+    'pricing.pkg3.feat2':'Jadwal fleksibel',
+    'pricing.pkg4.name':'10 Kelas', 'pricing.pkg4.feat1':'10 kelas per bulan',
+    'pricing.pkg4.feat2':'Nilai terbaik per kelas', 'pricing.pkg4.feat3':'Prioritas booking',
+    'pricing.feataccess':'Akses ke semua fasilitas', 'pricing.featmat':'Matras disediakan',
+    'pricing.featonline':'Booking online',
+    // Locate page
+    'locate.eyebrow':'Temukan Kami', 'locate.title':'Kunjungi studio kami',
+    'locate.address':'Alamat', 'locate.phone':'Telepon', 'locate.email':'Email', 'locate.hours':'Jam Buka',
+    'locate.visitus':'Kunjungi Kami', 'locate.findstudio':'Temukan studio kami',
+    'locate.information':'Informasi', 'locate.addresscontact':'Alamat &<br>Kontak',
+    'locate.openinghours':'Jam Buka',
+    'locate.privatevehicle':'Kendaraan Pribadi', 'locate.privatevehicledesc':'Tersedia parkir di depan studio. Gratis untuk member.',
+    'locate.ridehailing':'Ojek/Taksi Online', 'locate.ridehailingdesc':'Cari di Gojek atau Grab. Titik penjemputan tepat di pintu masuk.',
+    // Feedback page
+    'feedback.eyebrow':'Suara Anda penting', 'feedback.title':'Masukan',
+    'feedback.sharetitle':'Bagikan pendapat Anda',
+    'feedback.subtitle':'Semua masukan Anda dibaca langsung oleh tim Avaia Studio.',
+    'feedback.name':'Nama (opsional)', 'feedback.email':'Email (opsional)',
+    'feedback.type':'Jenis Masukan', 'feedback.suggestion':'Saran', 'feedback.criticism':'Kritik',
+    'feedback.question':'Pertanyaan', 'feedback.compliment':'Pujian',
+    'feedback.rating':'Nilai Pengalaman Anda', 'feedback.selectrating':'Pilih rating',
+    'feedback.message':'Pesan', 'feedback.messageph':'Tulis kritik, saran, atau pertanyaan Anda...',
+    'feedback.send':'Kirim Masukan', 'feedback.thankyou':'Terima kasih!',
+    'feedback.received':'Masukan Anda telah kami terima dan akan ditinjau oleh tim kami.',
+    'feedback.sendmore':'Kirim Masukan Lain', 'feedback.whymatters':'Mengapa masukan Anda penting',
+    'feedback.whydesc':'Avaia Studio terus berkembang berkat masukan dari member dan tamu kami. Setiap saran akan kami pertimbangkan untuk meningkatkan kualitas layanan.',
+    'feedback.directcontact':'Kontak Langsung', 'feedback.servicehours':'Jam Layanan',
+    'feedback.msgrequired':'Pesan tidak boleh kosong.', 'feedback.failedsend':'Gagal mengirim.',
+    'fb.r1':'Sangat Buruk', 'fb.r2':'Buruk', 'fb.r3':'Cukup', 'fb.r4':'Baik', 'fb.r5':'Sangat Baik',
+    // Booking/package confirmation flow
+    'msg.fillbookingfields':'Silakan lengkapi nama, email, dan nomor WhatsApp Anda.',
+    'msg.processing':'Memproses...',
+    'msg.bookingfor':'booking Anda untuk', 'msg.on':'pada', 'msg.at':'pukul',
+    'msg.confirmedusingcredit':'telah dikonfirmasi menggunakan 1 kredit kelas dari paket',
+    'msg.package':'Anda.', 'msg.creditsleft':'kredit tersisa.',
+    'msg.confirmedsaved':'telah dikonfirmasi dan tersimpan ke database.',
+    'msg.simmodenote':'Mode simulasi — atur Midtrans untuk pembayaran sungguhan.',
+    'msg.connectionerror':'Kesalahan koneksi.',
+    'msg.packagenowactive':'kini aktif —',
+    'msg.creditsvalidfor':'kredit kelas, berlaku selama',
+    'msg.days':'hari.',
+    'time.justnow':'Baru saja', 'time.minago':'menit lalu', 'time.hrago':'jam lalu', 'time.dayago':'hari lalu',
+  }
+};
+
+function getLang(){
+  return localStorage.getItem('avaia_lang') || 'en';
+}
+function setLang(lang){
+  localStorage.setItem('avaia_lang', lang);
+  window.location.reload();
+}
+function toggleLang(){
+  setLang(getLang()==='en' ? 'id' : 'en');
+}
+function t(key){
+  const lang = getLang();
+  const dict = I18N[lang] || I18N.en;
+  return (dict && dict[key] !== undefined) ? dict[key] : (I18N.en[key] !== undefined ? I18N.en[key] : key);
+}
+function applyI18n(root){
+  const scope = root || document;
+  scope.querySelectorAll('[data-i18n]').forEach(el=>{
+    el.innerHTML = t(el.getAttribute('data-i18n'));
+  });
+  scope.querySelectorAll('[data-i18n-ph]').forEach(el=>{
+    el.setAttribute('placeholder', t(el.getAttribute('data-i18n-ph')));
+  });
+}
+
+// Display-only day/month names. IMPORTANT: these are for showing dates to
+// the person only — the actual DAY/MON arrays in core.js stay in English
+// everywhere else, since day names double as data-matching keys against
+// what's stored in the schedule table. Never use these for comparisons.
+const MON_DISPLAY = {
+  en: ['January','February','March','April','May','June','July','August','September','October','November','December'],
+  id: ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'],
+};
+const DAY_DISPLAY = {
+  en: ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],
+  id: ['Minggu','Senin','Selasa','Rabu','Kamis',"Jumat",'Sabtu'],
+};
+function monDisplay(i){ return (MON_DISPLAY[getLang()]||MON_DISPLAY.en)[i]; }
+function dayDisplay(i){ return (DAY_DISPLAY[getLang()]||DAY_DISPLAY.en)[i]; }

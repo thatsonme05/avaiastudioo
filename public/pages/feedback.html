@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Feedback — Avaia Studio</title>
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/feedback.css">
+  <script>window.PAGE_ID='feedback'; window.PAGE_TITLE='Feedback';</script>
+</head>
+<body>
+<nav class="navbar" id="main-nav"></nav>
+<div class="nav-overlay" id="nav-overlay" onclick="closeDrawer()"></div>
+<div class="nav-drawer">
+  <div class="drawer-head"><img src="/img/logo-dark.svg" class="brand-icon" alt="Avaia Studio"></div>
+  <div class="drawer-nav"></div>
+  <div class="drawer-foot"></div>
+</div>
+
+<div style="padding-top:var(--nav)">
+  <div class="page-top">
+    <div class="page-top-in">
+      <p class="eye" data-i18n="feedback.eyebrow">Your voice matters</p>
+      <h1 class="h2" data-i18n="feedback.title">Feedback</h1>
+    </div>
+  </div>
+
+  <div class="fb-wrap">
+    <div class="fb-grid">
+      <!-- Form -->
+      <div class="fb-form-box">
+        <h2 class="h3" style="margin-bottom:6px" data-i18n="feedback.sharetitle">Share your thoughts</h2>
+        <p class="body-t" style="margin-bottom:28px;font-size:14px" data-i18n="feedback.subtitle">All feedback is read directly by the Avaia Studio team.</p>
+
+        <div id="fb-form">
+          <div class="fr">
+            <div class="fg"><label class="fl" data-i18n="feedback.name">Name (optional)</label>
+              <input type="text" class="fi" id="fb-name" placeholder="Your name"></div>
+            <div class="fg"><label class="fl" data-i18n="feedback.email">Email (optional)</label>
+              <input type="email" class="fi" id="fb-email" placeholder="email@example.com"></div>
+          </div>
+
+          <div class="fg">
+            <label class="fl" data-i18n="feedback.type">Feedback Type</label>
+            <div class="fb-type-row">
+              <button class="fb-type active" data-type="suggestion" onclick="setType('suggestion',this)" data-i18n="feedback.suggestion">Suggestion</button>
+              <button class="fb-type" data-type="criticism" onclick="setType('criticism',this)" data-i18n="feedback.criticism">Criticism</button>
+              <button class="fb-type" data-type="question" onclick="setType('question',this)" data-i18n="feedback.question">Question</button>
+              <button class="fb-type" data-type="compliment" onclick="setType('compliment',this)" data-i18n="feedback.compliment">Compliment</button>
+            </div>
+          </div>
+
+          <div class="fg">
+            <label class="fl" data-i18n="feedback.rating">Rate Your Experience</label>
+            <div class="star-row" id="star-row">
+              <button class="star" onclick="setRating(1)">★</button>
+              <button class="star" onclick="setRating(2)">★</button>
+              <button class="star" onclick="setRating(3)">★</button>
+              <button class="star" onclick="setRating(4)">★</button>
+              <button class="star" onclick="setRating(5)">★</button>
+            </div>
+            <p class="sm" id="rating-label" style="margin-top:4px" data-i18n="feedback.selectrating">Choose a rating</p>
+          </div>
+
+          <div class="fg">
+            <label class="fl" data-i18n="feedback.message">Message <span style="color:var(--p)">*</span></label>
+            <textarea class="ft fi" id="fb-msg" placeholder="Write your criticism, suggestion, or question..." data-i18n-ph="feedback.messageph" rows="5"></textarea>
+          </div>
+
+          <button class="btn bp" style="width:100%" onclick="submitFeedback()" data-i18n="feedback.send">Send Feedback</button>
+        </div>
+
+        <div class="ok-wrap" id="fb-ok">
+          <div class="ok-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <h3 style="font-family:var(--fd);font-size:24px;font-weight:600;margin-bottom:8px" data-i18n="feedback.thankyou">Thank you!</h3>
+          <p style="font-size:14px;color:var(--mt);margin-bottom:20px" data-i18n="feedback.received">We've received your feedback and our team will review it.</p>
+          <button class="btn bo" onclick="resetFeedback()" data-i18n="feedback.sendmore">Send More Feedback</button>
+        </div>
+      </div>
+
+      <!-- Info -->
+      <div class="fb-info">
+        <div class="fb-info-card">
+          <h3 class="h4" style="margin-bottom:12px" data-i18n="feedback.whymatters">Why your feedback matters</h3>
+          <p style="font-size:14px;color:var(--mt);line-height:1.8" data-i18n="feedback.whydesc">Avaia Studio keeps improving thanks to feedback from our members and guests. Every suggestion is considered to help us improve our service.</p>
+        </div>
+        <div class="fb-info-card">
+          <h3 class="h4" style="margin-bottom:12px" data-i18n="feedback.directcontact">Direct Contact</h3>
+          <p style="font-size:14px;color:var(--mt);margin-bottom:6px" id="fb-contact-addr">—</p>
+          <p style="font-size:14px;color:var(--mt);margin-bottom:6px" id="fb-contact-phone">—</p>
+          <p style="font-size:14px;color:var(--mt)" id="fb-contact-email">—</p>
+        </div>
+        <div class="fb-info-card">
+          <h3 class="h4" style="margin-bottom:12px" data-i18n="feedback.servicehours">Service Hours</h3>
+          <p style="font-size:14px;color:var(--mt)" id="fb-contact-hours">—</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer id="main-footer"></footer>
+<script src="/js/i18n.js"></script>
+<script src="/js/core.js"></script>
+<script>
+let selectedType   = 'suggestion';
+let selectedRating = 0;
+const RATING_LABELS_KEY = ['','fb.r1','fb.r2','fb.r3','fb.r4','fb.r5'];
+
+function setType(type, btn) {
+  selectedType = type;
+  document.querySelectorAll('.fb-type').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function setRating(n) {
+  selectedRating = n;
+  document.querySelectorAll('.star').forEach((s,i) => s.classList.toggle('active', i < n));
+  const lbl = document.getElementById('rating-label');
+  if (lbl) lbl.textContent = n ? t(RATING_LABELS_KEY[n]) : '';
+}
+
+async function submitFeedback() {
+  const msg = gv('fb-msg');
+  if (!msg) { toast(t('feedback.msgrequired'),'err'); return; }
+  try {
+    const r = await fetch('/api/feedback', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        name:    gv('fb-name') || (getLang()==='id'?'Anonim':'Anonymous'),
+        email:   gv('fb-email'),
+        type:    selectedType,
+        message: msg,
+        rating:  selectedRating || null,
+      })
+    });
+    const d = await r.json();
+    if (d.ok) {
+      document.getElementById('fb-form').style.display = 'none';
+      document.getElementById('fb-ok').classList.add('show');
+    } else toast(d.error || t('feedback.failedsend'),'err');
+  } catch(e) { toast(t('msg.connectionerror'),'err'); }
+}
+
+function resetFeedback() {
+  sv('fb-name',''); sv('fb-email',''); sv('fb-msg','');
+  selectedType = 'suggestion'; selectedRating = 0;
+  document.querySelectorAll('.fb-type').forEach((b,i) => b.classList.toggle('active',i===0));
+  document.querySelectorAll('.star').forEach(s => s.classList.remove('active'));
+  const lbl = document.getElementById('rating-label'); if(lbl) lbl.textContent=t('feedback.selectrating');
+  document.getElementById('fb-form').style.display = 'block';
+  document.getElementById('fb-ok').classList.remove('show');
+}
+
+function pageInit() {
+  if (ST.address) document.getElementById('fb-contact-addr').textContent  = ST.address;
+  if (ST.phone)   document.getElementById('fb-contact-phone').textContent = ST.phone;
+  if (ST.email)   document.getElementById('fb-contact-email').textContent = ST.email;
+  if (ST.hours)   document.getElementById('fb-contact-hours').textContent = ST.hours;
+}
+</script>
+</body>
+</html>

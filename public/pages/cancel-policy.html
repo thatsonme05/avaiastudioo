@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Cancellation Policy — Avaia Studio</title>
+  <link rel="stylesheet" href="/css/global.css">
+  <script>window.PAGE_ID='cancel-policy'; window.PAGE_TITLE='Cancellation Policy';</script>
+</head>
+<body>
+<nav class="navbar" id="main-nav"></nav>
+<div class="nav-overlay" id="nav-overlay" onclick="closeDrawer()"></div>
+<div class="nav-drawer">
+  <div class="drawer-head"><img src="/img/logo-dark.svg" class="brand-icon" alt="Avaia Studio"></div>
+  <div class="drawer-nav"></div>
+  <div class="drawer-foot"></div>
+</div>
+
+<div style="padding-top:var(--nav)">
+  <div class="page-top">
+    <div class="page-top-in"><p class="eye">Policy</p><h1 class="h2">Cancellation Policy</h1></div>
+  </div>
+
+  <div class="pol-wrap">
+    <p class="pol-updated">Last updated: <span id="pol-date"></span></p>
+
+    <div class="pol-sec">
+      <h2>1. Cancellation by Members</h2>
+      <p>Members can cancel a class booking on their own through the Dashboard page, at least <strong>2 hours before</strong> the class starts.</p>
+      <ul>
+        <li>Cancelling more than 2 hours before class: the spot and fee can be returned as class credit.</li>
+        <li>Last-minute cancellations (less than 8 hours before class): fees already paid are non-refundable.</li>
+        <li>Not showing up without cancelling ("no-show") is treated as a class already used.</li>
+      </ul>
+    </div>
+
+    <div class="pol-sec">
+      <h2>2. Cancellation by the Studio</h2>
+      <p>Under certain circumstances (instructor unavailability, force majeure, insufficient minimum participants, etc.), the studio reserves the right to cancel or reschedule a class.</p>
+      <p>Affected members will be notified as soon as possible, with the option to be moved to another session or receive a full refund as class credit.</p>
+    </div>
+
+    <div class="pol-sec">
+      <h2>3. Refunds & Class Credit</h2>
+      <ul>
+        <li>Approved refunds will be processed back to the original payment method within 7–14 business days, depending on the payment method.</li>
+        <li>Class credit is valid for the duration of your active membership and can be used to book other classes.</li>
+      </ul>
+      <div class="pol-note">Need help with a cancellation or refund? Contact us via our <a href="/feedback" style="color:var(--p);font-weight:600">Feedback</a> page or the contact details in the footer.</div>
+    </div>
+
+    <div class="pol-sec">
+      <h2>4. Policy Changes</h2>
+      <p>Avaia Studio reserves the right to update this policy at any time. Changes take effect from the date they are published on this page.</p>
+    </div>
+  </div>
+</div>
+
+<footer id="main-footer"></footer>
+<script src="/js/i18n.js"></script>
+<script src="/js/core.js"></script>
+<script>
+function pageInit(){
+  document.getElementById('pol-date').textContent = new Date().toLocaleDateString('en-US',{day:'numeric',month:'long',year:'numeric'});
+}
+</script>
+</body>
+</html>
