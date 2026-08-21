@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Membership — Avaia Studio</title>
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/pricing.css">
+  <script>window.PAGE_ID='pricing'; window.PAGE_TITLE='Membership';</script>
+</head>
+<body>
+<nav class="navbar" id="main-nav"></nav>
+<div class="nav-overlay" id="nav-overlay" onclick="closeDrawer()"></div>
+<div class="nav-drawer">
+  <div class="drawer-head"><img src="/img/logo-dark.svg" class="brand-icon" alt="Avaia Studio"></div>
+  <div class="drawer-nav"></div>
+  <div class="drawer-foot"></div>
+</div>
+<div style="padding-top:var(--nav)">
+  <div class="page-top">
+    <div class="page-top-in"><p class="eye" data-i18n="pricing.eyebrow">Membership Packages</p><h1 class="h2" data-i18n="pricing.title">Choose the plan that suits you</h1></div>
+  </div>
+  <div class="pr-wrap">
+    <p class="body-t" style="max-width:520px;margin-bottom:12px" data-i18n="pricing.subtitle">All packages include full access to our studio facilities. No hidden fees.</p>
+    <div class="pr-grid" id="pr-grid">
+      <div class="skel" style="height:340px"></div>
+      <div class="skel" style="height:340px"></div>
+      <div class="skel" style="height:340px"></div>
+      <div class="skel" style="height:340px"></div>
+    </div>
+    <h2 class="h3" style="margin:56px 0 24px" data-i18n="pricing.comparison">Package Comparison</h2>
+    <div class="tw">
+      <table class="tbl">
+        <thead><tr><th data-i18n="pricing.feature">Feature</th><th data-i18n="pricing.pkg1.name">Single Class</th><th data-i18n="pricing.pkg2.name">First Timer</th><th data-i18n="pricing.pkg3.name">5 Classes</th><th data-i18n="pricing.pkg4.name">10 Classes</th></tr></thead>
+        <tbody>
+          <tr><td data-i18n="pricing.numclasses">Number of classes</td><td>1</td><td>3</td><td>5</td><td>10</td></tr>
+          <tr><td data-i18n="modal.package.price">Price</td><td>IDR 100,000</td><td>IDR 240,000</td><td>IDR 400,000</td><td>IDR 800,000</td></tr>
+          <tr><td data-i18n="pricing.priceperclass">Price per class</td><td>IDR 100,000</td><td>IDR 80,000</td><td>IDR 80,000</td><td>IDR 80,000</td></tr>
+          <tr><td data-i18n="pricing.validityperiod">Validity period</td><td data-i18n="pricing.singleuse">Single use</td><td data-i18n="pricing.7days">7 days</td><td data-i18n="pricing.1month">1 month</td><td data-i18n="pricing.1month">1 month</td></tr>
+          <tr><td data-i18n="pricing.bestfor">Best for</td><td data-i18n="pricing.tryclass">Trying a class</td><td data-i18n="pricing.firsttimevisit">First-time visitors</td><td data-i18n="pricing.regularpractice">Regular practice</td><td data-i18n="pricing.committedpractice">Committed practice</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="pr-faq">
+    <div style="max-width:660px;margin:0 auto">
+      <div style="margin-bottom:36px"><p class="eye" data-i18n="pricing.faq">FAQ</p><h2 class="h2" style="margin:0" data-i18n="pricing.faqtitle">Frequently Asked Questions</h2></div>
+      <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span data-i18n="pricing.faq1.q">Is there a minimum contract?</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="18"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button><div class="faq-a" data-i18n="pricing.faq1.a">No contracts here — all our packages are pay-as-you-go. Simply purchase again whenever you're ready for more classes.</div></div>
+      <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span data-i18n="pricing.faq2.q">How do I book a class?</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="18"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button><div class="faq-a" data-i18n="pricing.faq2.a">Create an account, then go to the Schedule page and tap Book. Your details are filled in automatically.</div></div>
+      <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span data-i18n="pricing.faq3.q">How far in advance can I book?</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="18"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button><div class="faq-a" data-i18n="pricing.faq3.a">Bookings open 7 days ahead and close 2 hours before the class starts, subject to availability.</div></div>
+      <div class="faq-item"><button class="faq-q" onclick="toggleFaq(this)"><span data-i18n="pricing.faq4.q">Is there a free trial class?</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="18"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button><div class="faq-a" data-i18n="pricing.faq4.a">Yes! New members get their first Foundations class free. Just sign up and book.</div></div>
+    </div>
+  </div>
+</div>
+<footer id="main-footer"></footer>
+<script src="/js/i18n.js"></script>
+<script src="/js/core.js?v=20260819retry1"></script>
+<script>
+function toggleFaq(btn) {
+  const a = btn.nextElementSibling;
+  const open = a.classList.contains('open');
+  document.querySelectorAll('.faq-a').forEach(el=>el.classList.remove('open'));
+  document.querySelectorAll('.faq-q').forEach(el=>el.classList.remove('open'));
+  if (!open) { a.classList.add('open'); btn.classList.add('open'); }
+}
+
+function buildDefaultPackages() {
+  return [
+    { id:null, name:t('pricing.pkg1.name'), price:100000, duration:'per class', credits:1, validity_days:7, tag:t('pricing.tag.tryitout'),
+      features:[t('pricing.pkg1.feat1'),t('pricing.feataccess'),t('pricing.featmat'),t('pricing.featonline')] },
+    { id:null, name:t('pricing.pkg2.name'), price:240000, duration:'3 classes · valid for 7 days', credits:3, validity_days:7, tag:t('pricing.tag.newmember'),
+      features:[t('pricing.pkg2.feat1'),t('pricing.pkg2.feat2'),t('pricing.feataccess'),t('pricing.featonline')] },
+    { id:null, name:t('pricing.pkg3.name'), price:400000, duration:'5 classes · valid for 1 month', credits:5, validity_days:30, tag:t('pricing.tag.monthly'),
+      features:[t('pricing.pkg3.feat1'),t('pricing.pkg3.feat2'),t('pricing.feataccess'),t('pricing.featonline')] },
+    { id:null, name:t('pricing.pkg4.name'), price:800000, duration:'10 classes · valid for 1 month', credits:10, validity_days:30, tag:t('pricing.tag.popular'), featured:true,
+      features:[t('pricing.pkg4.feat1'),t('pricing.pkg4.feat2'),t('pricing.pkg4.feat3'),t('pricing.feataccess')] },
+  ];
+}
+const DEFAULT_PACKAGES = buildDefaultPackages();
+
+let _currentPackages = [];
+
+function renderPackages(packages) {
+  _currentPackages = packages;
+  const grid = document.getElementById('pr-grid');
+  if (!grid) return;
+  grid.innerHTML = packages.map((p,i) => {
+    const featClass  = p.featured ? ' pr-feat-card' : '';
+    const titleColor = p.featured ? 'color:#fff' : '';
+    const priceColor = p.featured ? 'color:#fff' : '';
+    const perColor   = p.featured ? 'color:rgba(255,255,255,.55)' : '';
+    const tagColor   = p.featured ? 'color:rgba(255,255,255,.5)' : '';
+    const divBg      = p.featured ? 'background:rgba(255,255,255,.2)' : '';
+    const featsClass = p.featured ? ' pr-feats-lt' : '';
+    const btnHtml    = p.featured
+      ? `<button class="btn" style="width:100%;background:#fff;color:var(--p)" onclick="buyPackageAt(${i})">${t('pricing.getstarted')}</button>`
+      : `<button class="btn bo" style="width:100%" onclick="buyPackageAt(${i})">${t('pricing.signupbook')}</button>`;
+    return `
+      <div class="pr-card${featClass}">
+        <p class="pr-tag" style="${tagColor}">${p.tag || ''}</p>
+        <h3 class="h3" style="${titleColor}">${p.name}</h3>
+        <div class="pr-price" style="${priceColor}">${fmtRpShort(p.price)}</div>
+        <div class="pr-per" style="${perColor}">${p.duration || ''}</div>
+        <div class="pr-div" style="${divBg}"></div>
+        <ul class="pr-feats${featsClass}">
+          ${(p.features||[]).map(f => `<li>${f}</li>`).join('')}
+        </ul>
+        ${btnHtml}
+      </div>`;
+  }).join('');
+}
+
+function buyPackageAt(i){
+  const pkg=_currentPackages[i];
+  if(!pkg) return;
+  if(!pkg.id){ toast(t('pricing.notavailable'),'err'); return; }
+  openPackagePurchase(pkg);
+}
+
+function fmtRpShort(n) {
+  if (n >= 1000000) return 'IDR ' + (n/1000000).toFixed(1).replace('.0','') + 'M';
+  if (n >= 1000) return 'IDR ' + n.toLocaleString('en-US');
+  return 'IDR ' + n;
+}
+
+async function pageInit() {
+  try {
+    const r = await fetch('/api/memberships');
+    const custom = await r.json();
+    if (custom && custom.length > 0) {
+      const packages = custom.map((p, i) => ({
+        ...p,
+        tag: i === 0 ? t('pricing.tag.tryitout') : i === custom.length-1 ? t('pricing.tag.popular') : t('pricing.tag.monthly'),
+        featured: custom.length >= 2 && i === Math.floor(custom.length/2),
+      }));
+      renderPackages(packages);
+    } else {
+      renderPackages(DEFAULT_PACKAGES);
+    }
+  } catch(e) {
+    renderPackages(DEFAULT_PACKAGES);
+  }
+}
+</script>
+</body>
+</html>

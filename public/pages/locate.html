@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Locate Us — Avaia Studio</title>
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/locate.css">
+  <script>window.PAGE_ID='locate'; window.PAGE_TITLE='Locate Us';</script>
+</head>
+<body>
+<nav class="navbar" id="main-nav"></nav>
+<div class="nav-overlay" id="nav-overlay" onclick="closeDrawer()"></div>
+<div class="nav-drawer">
+  <div class="drawer-head"><img src="/img/logo-dark.svg" class="brand-icon" alt="Avaia Studio"></div>
+  <div class="drawer-nav"></div>
+  <div class="drawer-foot"></div>
+</div>
+<div style="padding-top:var(--nav)">
+  <div class="page-top">
+    <div class="page-top-in"><p class="eye" data-i18n="locate.visitus">Visit Us</p><h1 class="h2" data-i18n="locate.findstudio">Find our studio</h1></div>
+  </div>
+  <div class="loc-split">
+    <div class="loc-info">
+      <p class="eye" style="color:rgba(255,255,255,.38)" data-i18n="locate.information">Information</p>
+      <h2 class="h2" style="color:#fff;margin-bottom:28px" data-i18n="locate.addresscontact">Address &<br>Contact</h2>
+      <div class="loc-item"><div class="loc-lbl" data-i18n="locate.address">Address</div><div class="loc-val" id="loc-addr">—</div></div>
+      <div class="loc-item"><div class="loc-lbl" data-i18n="locate.phone">Phone</div><div class="loc-val" id="loc-phone">—</div></div>
+      <div class="loc-item"><div class="loc-lbl" data-i18n="locate.email">Email</div><div class="loc-val" id="loc-email">—</div></div>
+      <div class="loc-item"><div class="loc-lbl" data-i18n="locate.openinghours">Opening Hours</div><div class="loc-val" id="loc-hours">—</div></div>
+      <div style="margin-top:24px"><a href="/schedule" class="btn bol bsm" data-i18n="home.viewschedule">View Schedule</a></div>
+    </div>
+    <div class="loc-map"><iframe id="loc-map-frame" src="about:blank" allowfullscreen loading="lazy"></iframe></div>
+  </div>
+  <div class="loc-transport">
+    <div class="loc-tcard"><h3 class="h4" style="margin-bottom:8px" data-i18n="locate.privatevehicle">Private Vehicle</h3><p class="body-t" style="font-size:14px" data-i18n="locate.privatevehicledesc">Parking is available in front of the studio. Free for members.</p></div>
+    <div class="loc-tcard"><h3 class="h4" style="margin-bottom:8px" data-i18n="locate.ridehailing">Ride-Hailing</h3><p class="body-t" style="font-size:14px" data-i18n="locate.ridehailingdesc">Search on Gojek or Grab. Drop-off zone is right at the entrance.</p></div>
+  </div>
+</div>
+<footer id="main-footer"></footer>
+<script src="/js/i18n.js"></script>
+<script src="/js/core.js?v=20260819retry1"></script>
+<script>
+function pageInit() {
+  document.getElementById('loc-addr').textContent  = ST.address || '—';
+  document.getElementById('loc-phone').textContent = ST.phone   || '—';
+  document.getElementById('loc-email').textContent = ST.email   || '—';
+  document.getElementById('loc-hours').textContent = ST.hours   || '—';
+  if (ST.mapEmbed) document.getElementById('loc-map-frame').src = ST.mapEmbed;
+}
+</script>
+</body>
+</html>

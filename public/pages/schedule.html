@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Schedule — Avaia Studio</title>
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/schedule.css">
+  <script>window.PAGE_ID='schedule'; window.PAGE_TITLE='Schedule';</script>
+</head>
+<body>
+
+<nav class="navbar" id="main-nav"></nav>
+<div class="nav-overlay" id="nav-overlay" onclick="closeDrawer()"></div>
+<div class="nav-drawer">
+  <div class="drawer-head"><img src="/img/logo-dark.svg" class="brand-icon" alt="Avaia Studio"></div>
+  <div class="drawer-nav"></div>
+  <div class="drawer-foot"></div>
+</div>
+
+<div style="padding-top:var(--nav)">
+  <div class="page-top">
+    <div class="page-top-in">
+      <p class="eye" data-i18n="schedule.eyebrow">Class Schedule</p>
+      <h1 class="h2" data-i18n="schedule.title">Pick a time that works for you</h1>
+    </div>
+  </div>
+
+  <div class="sch-wrap">
+    <!-- Top: title + clock -->
+    <div class="sch-top">
+      <div>
+        <p class="sm" style="margin-bottom:4px" data-i18n="schedule.subtitle">Click the <strong>Book</strong> button to reserve — saved directly to the database</p>
+        <p class="sm" style="display:flex;align-items:center;gap:6px;color:var(--ok)">
+          <span style="width:7px;height:7px;border-radius:50%;background:var(--ok);display:inline-block;animation:livepulse 1.6s infinite"></span>
+          <span data-i18n="schedule.live">Live — slots update automatically</span>
+        </p>
+      </div>
+      <div class="sch-clock">
+        <div class="sch-date" id="sch-date">—</div>
+        <div class="sch-day"  id="sch-day">—</div>
+        <div class="sch-time" id="sch-time">—</div>
+      </div>
+    </div>
+
+    <!-- Sliding date picker -->
+    <div class="sch-slider">
+      <div class="sch-slider-title">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9.5h18M8 3v4M16 3v4"/></svg>
+        <span id="sch-strip-title">—</span>
+      </div>
+      <div class="sch-strip-row">
+        <button class="sch-strip-nav" onclick="stripShift(-1)" aria-label="Earlier dates">&#8249;</button>
+        <div class="sch-strip" id="sch-strip"></div>
+        <button class="sch-strip-nav" onclick="stripShift(1)" aria-label="Later dates">&#8250;</button>
+      </div>
+      <div class="sch-filters">
+        <select class="sch-filter" id="flt-class" onchange="onFilterChange()"><option value="" data-i18n="nav.classes">Classes</option></select>
+        <select class="sch-filter" id="flt-instructor" onchange="onFilterChange()"><option value="" data-i18n="schedule.instructor">Instructor</option></select>
+        <select class="sch-filter" id="flt-level" onchange="onFilterChange()">
+          <option value="" data-i18n="schedule.leveldiff">Level of difficulty</option>
+          <option value="Beginner" data-i18n="classes.filter.beginner">Beginner</option>
+          <option value="Intermediate">Intermediate</option>
+          <option value="Advanced">Advanced</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="tw">
+      <table class="sch-tbl">
+        <thead>
+          <tr>
+            <th data-i18n="modal.booking.date">Date</th>
+            <th data-i18n="schedule.time">Time</th>
+            <th data-i18n="schedule.class">Class</th>
+            <th data-i18n="schedule.level">Level</th>
+            <th data-i18n="schedule.duration">Duration</th>
+            <th data-i18n="schedule.price">Price</th>
+            <th data-i18n="schedule.slotsleft">Spots Left</th>
+            <th data-i18n="schedule.book">Booking</th>
+          </tr>
+        </thead>
+        <tbody id="sch-body">
+          <tr><td colspan="8" style="padding:32px;text-align:center;color:var(--mt)" data-i18n="schedule.loading">Loading schedule...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<footer id="main-footer"></footer>
+<script src="/js/i18n.js"></script>
+<script src="/js/core.js?v=20260819retry1"></script>
+<script>
+let schData = [];
+let filterClass = '', filterInstructor = '', filterLevel = '';
+
+const today0 = new Date(); today0.setHours(0,0,0,0);
+let selectedDate = new Date(today0);
+
+// The full scrollable date rail: a few days of context before today, then
+// ~3 months ahead. Built once — the strip itself scrolls/slides, it isn't rebuilt.
+const STRIP_BEFORE = 3, STRIP_AFTER = 86;
+const stripDates = [];
+for (let i = -STRIP_BEFORE; i <= STRIP_AFTER; i++) {
+  const d = new Date(today0); d.setDate(today0.getDate() + i);
+  stripDates.push(d);
+}
+
+function startClock() {
+  function tick() {
+    const now = new Date();
+    document.getElementById('sch-date').textContent =
+      now.getDate() + ' ' + monDisplay(now.getMonth()) + ' ' + now.getFullYear();
+    document.getElementById('sch-day').textContent = dayDisplay(now.getDay());
+    document.getElementById('sch-time').textContent =
+      [now.getHours(), now.getMinutes(), now.getSeconds()]
+      .map(n => String(n).padStart(2,'0')).join(':');
+  }
+  tick(); setInterval(tick, 1000);
+}
+
+/* ── SLIDING DATE STRIP ── */
+function buildDateStrip() {
+  const c = document.getElementById('sch-strip');
+  if (!c) return;
+  c.innerHTML = stripDates.map(d => {
+    const isPast = d < today0;
+    const isSel  = d.getTime() === selectedDate.getTime();
+    const isToday = d.getTime() === today0.getTime();
+    const cls = ['sch-strip-cell'];
+    if (isPast) cls.push('past');
+    if (isSel) cls.push('selected');
+    if (isToday && !isSel) cls.push('today');
+    return `<button class="${cls.join(' ')}" data-y="${d.getFullYear()}" data-m="${d.getMonth()}"
+      ${isPast ? 'disabled' : ''} onclick="pickStripDate(${d.getTime()})">
+      <span class="sch-strip-dow">${dayDisplay(d.getDay()).slice(0,3)}</span>
+      <span class="sch-strip-num">${String(d.getDate()).padStart(2,'0')}</span>
+    </button>`;
+  }).join('');
+  requestAnimationFrame(() => {
+    const sel = c.querySelector('.sch-strip-cell.selected');
+    if (sel) sel.scrollIntoView({ inline: 'center', block: 'nearest' });
+    updateStripTitle();
+  });
+}
+
+function pickStripDate(ts) {
+  const d = new Date(ts);
+  if (d < today0) return; // no booking into the past
+  selectedDate = d;
+  buildDateStrip();
+  renderRows();
+}
+
+function stripShift(dir) {
+  const c = document.getElementById('sch-strip');
+  if (!c) return;
+  c.scrollBy({ left: dir * c.clientWidth * 0.9, behavior: 'smooth' });
+}
+
+function updateStripTitle() {
+  const c = document.getElementById('sch-strip');
+  const titleEl = document.getElementById('sch-strip-title');
+  if (!c || !titleEl) return;
+  const rect = c.getBoundingClientRect();
+  const cells = [...c.querySelectorAll('.sch-strip-cell')];
+  const visible = cells.filter(el => {
+    const r = el.getBoundingClientRect();
+    return r.right > rect.left + 2 && r.left < rect.right - 2;
+  });
+  if (!visible.length) return;
+  const first = visible[0], last = visible[visible.length - 1];
+  const fm = +first.dataset.m, fy = +first.dataset.y, lm = +last.dataset.m, ly = +last.dataset.y;
+  if (fy === ly && fm === lm) titleEl.textContent = monDisplay(fm) + ' ' + fy;
+  else if (fy === ly) titleEl.textContent = monDisplay(fm).slice(0,3) + ' – ' + monDisplay(lm).slice(0,3) + ' ' + fy;
+  else titleEl.textContent = monDisplay(fm).slice(0,3) + ' ' + fy + ' – ' + monDisplay(lm).slice(0,3) + ' ' + ly;
+}
+
+/* ── FILTERS ── */
+function populateFilters() {
+  const classes = [...new Set(schData.map(s => s.className).filter(Boolean))].sort();
+  const instructors = [...new Set(schData.map(s => s.instructor).filter(Boolean))].sort();
+  const cSel = document.getElementById('flt-class');
+  const iSel = document.getElementById('flt-instructor');
+  if (cSel) { cSel.innerHTML = `<option value="">${t('nav.classes')}</option>` + classes.map(c => `<option value="${esc(c)}">${c}</option>`).join(''); cSel.value = filterClass; }
+  if (iSel) { iSel.innerHTML = `<option value="">${t('schedule.instructor')}</option>` + instructors.map(i => `<option value="${esc(i)}">${i}</option>`).join(''); iSel.value = filterInstructor; }
+}
+
+function onFilterChange() {
+  filterClass = gv('flt-class');
+  filterInstructor = gv('flt-instructor');
+  filterLevel = gv('flt-level');
+  renderRows();
+}
+
+function renderRows() {
+  const tbody = document.getElementById('sch-body');
+  if (!tbody) return;
+
+  const dayName = DAY[selectedDate.getDay()];
+  const iso = selectedDate.getFullYear()+'-'+String(selectedDate.getMonth()+1).padStart(2,'0')+'-'+String(selectedDate.getDate()).padStart(2,'0');
+  let rows = schData.filter(s => s.session_date ? s.session_date === iso : s.day === dayName);
+  if (filterClass) rows = rows.filter(s => s.className === filterClass);
+  if (filterInstructor) rows = rows.filter(s => s.instructor === filterInstructor);
+  if (filterLevel) rows = rows.filter(s => s.level === filterLevel);
+  rows = rows.sort((a,b) => a.time.localeCompare(b.time));
+
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="8" style="padding:32px;text-align:center;color:var(--mt)">${t('schedule.noclasses')}</td></tr>`;
+    return;
+  }
+
+  const dateStr = selectedDate.getDate() + ' ' + monDisplay(selectedDate.getMonth()) + ' ' + selectedDate.getFullYear();
+
+  tbody.innerHTML = rows.map(s => {
+    const full = s.slots <= 0;
+    const low  = s.slots > 0 && s.slots <= 3;
+    const lvCls = s.level === 'Beginner' ? 'b-lv-b'
+                : (s.level === 'Intermediate' || s.level === 'Advanced') ? 'b-lv-m'
+                : 'b-lv-a';
+    return `
+    <tr>
+      <td class="sch-date-cell">${dateStr}</td>
+      <td class="sch-time-cell">${s.time}</td>
+      <td>
+        <div class="sch-name">${s.className || '—'}</div>
+        <div class="sch-inst">${s.instructor || ''}</div>
+      </td>
+      <td><span class="badge ${lvCls}">${s.level || ''}</span></td>
+      <td class="sm">${s.duration || '—'}</td>
+      <td class="sch-price">${fmtRp(s.price || 85000)}</td>
+      <td>
+        <span class="sch-slots${full ? ' full' : low ? ' low' : ''}"
+          data-sid="${s.id}" data-n="${s.slots}">
+          ${full ? t('schedule.full') : s.slots + ' ' + t('schedule.spots') + (low ? ' — ' + t('schedule.almostfull') : '')}
+        </span>
+      </td>
+      <td>
+        <button class="btn bp bsm sch-btn"
+          ${full ? 'disabled' : ''}
+          onclick="${full ? '' : `openBooking('${esc(s.id)}','${esc(s.className)}','${dayName}','${esc(dateStr)}','${s.time}','${esc(s.instructor)}',${s.slots},${s.price||85000})`}">
+          ${full ? t('schedule.full') : t('schedule.book')}
+        </button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function pageInit() {
+  startClock();
+  buildDateStrip();
+  document.getElementById('sch-strip')?.addEventListener('scroll', () => {
+    clearTimeout(window._stripScrollT);
+    window._stripScrollT = setTimeout(updateStripTitle, 60);
+  });
+  await loadSchedule();
+  // Polling — check for schedule updates every 8 seconds (no Socket.IO, safe on any hosting)
+  setInterval(loadSchedule, 8000);
+}
+
+async function loadSchedule() {
+  try {
+    const r = await fetch('/api/schedule');
+    schData = await r.json();
+    populateFilters();
+    renderRows();
+  } catch(e) {
+    const tbody = document.getElementById('sch-body');
+    if (tbody) tbody.innerHTML = `<tr><td colspan="8" style="padding:32px;text-align:center;color:var(--mt)">${t('schedule.failedload')}</td></tr>`;
+  }
+}
+</script>
+<style>
+@keyframes livepulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+</style>
+</body>
+</html>

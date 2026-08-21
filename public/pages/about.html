@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>About Us — Avaia Studio</title>
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/about.css">
+  <script>window.PAGE_ID='about'; window.PAGE_TITLE='About Us';</script>
+</head>
+<body>
+<nav class="navbar" id="main-nav"></nav>
+<div class="nav-overlay" id="nav-overlay" onclick="closeDrawer()"></div>
+<div class="nav-drawer">
+  <div class="drawer-head"><img src="/img/logo-dark.svg" class="brand-icon" alt="Avaia Studio"></div>
+  <div class="drawer-nav"></div>
+  <div class="drawer-foot"></div>
+</div>
+<div style="padding-top:var(--nav)">
+  <div class="page-top">
+    <div class="page-top-in"><p class="eye" data-i18n="about.eyebrow">About Us</p><h1 class="h2" data-i18n="about.title">A yoga studio with a personal approach</h1></div>
+  </div>
+  <section class="ab-sec">
+    <div class="ab-grid">
+      <!-- Editable photo -->
+      <div class="ab-img-wrap" id="ab-img-wrap" onclick="triggerAboutUpload()" title="Click to change photo">
+        <div id="ab-img-inner" class="ab-placeholder">
+          <svg viewBox="0 0 80 100" fill="none" width="80"><circle cx="40" cy="14" r="7" fill="#1C1410"/><path d="M40 21 Q22 40 14 62" stroke="#1C1410" stroke-width="2" fill="none"/><path d="M40 21 Q58 40 66 62" stroke="#1C1410" stroke-width="2" fill="none"/><line x1="14" y1="62" x2="66" y2="62" stroke="#1C1410" stroke-width="1.5"/></svg>
+        </div>
+       <div class="ab-img-ov" id="ab-img-ov" style="display:none;"></div>
+      </div>
+      <input type="file" id="ab-img-input" accept="image/*" style="display:none" onchange="uploadAboutImg(this)">
+
+      <div class="ab-text">
+        <p class="eye" data-i18n="about.ourstory">Our Story</p>
+        <h2 class="h2" data-i18n="about.storytitle">Yoga isn't about<br>a perfect posture</h2>
+        <div class="div"></div>
+        <p class="body-t" id="ab-p1"></p>
+        <p class="body-t" id="ab-p2"></p>
+        <p class="body-t" id="ab-p3"></p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:24px">
+          <button class="btn bp" onclick="openMo('reg-mo')" data-i18n="about.joinnow">Join Now</button>
+          <a href="/classes" class="btn bo" data-i18n="about.viewclasses">View Classes</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- VALUES -->
+  <section style="padding:72px 60px;background:var(--sd)">
+    <div style="text-align:center;max-width:500px;margin:0 auto 44px"><p class="eye" data-i18n="about.ourvalues">Our Values</p><h2 class="h2" data-i18n="about.whychoose">Why choose Avaia</h2></div>
+    <div class="ab-vals">
+      <div class="ab-val"><h3 class="h4" style="margin-bottom:8px" data-i18n="about.val1.t">Certified Instructors</h3><p class="body-t" style="font-size:14px" data-i18n="about.val1.d">certified instructors & well-experienced.</p></div>
+      <div class="ab-val"><h3 class="h4" style="margin-bottom:8px" data-i18n="about.val2.t">Small, Personal Classes</h3><p class="body-t" style="font-size:14px" data-i18n="about.val2.d">Max 12–18 people so every student gets full attention.</p></div>
+      <div class="ab-val"><h3 class="h4" style="margin-bottom:8px" data-i18n="about.val3.t">Premium Facilities</h3><p class="body-t" style="font-size:14px" data-i18n="about.val3.d">Yoga essential, air conditioning, changing rooms, and lockers available.</p></div>
+      <div class="ab-val"><h3 class="h4" style="margin-bottom:8px" data-i18n="about.val4.t">Flexible Schedule</h3><p class="body-t" style="font-size:14px" data-i18n="about.val4.d">12+ sessions per week from 07:00 AM to 21:00 PM.</p></div>
+      <div class="ab-val"><h3 class="h4" style="margin-bottom:8px" data-i18n="about.val5.t">All Levels Welcome</h3><p class="body-t" style="font-size:14px" data-i18n="about.val5.d">Classes for beginners through experienced practitioners.</p></div>
+      <div class="ab-val"><h3 class="h4" style="margin-bottom:8px" data-i18n="about.val6.t">A Warm Community</h3><p class="body-t" style="font-size:14px" data-i18n="about.val6.d">bringing all wellness community in Palu to sharing good energy.</p></div>
+    </div>
+  </section>
+</div>
+<footer id="main-footer"></footer>
+<script src="/js/i18n.js"></script>
+<script src="/js/core.js?v=20260819retry1"></script>
+<script>
+function isAdmin() { return !!localStorage.getItem('avaia_staff'); }
+
+function triggerAboutUpload() {
+  if (!isAdmin()) { toast('Only admins can change this photo. Please log in at /admin first.','err'); return; }
+  document.getElementById('ab-img-input').click();
+}
+
+async function uploadAboutImg(input) {
+  const file = input.files[0]; if (!file) return;
+  const form = new FormData(); form.append('aboutImg', file);
+  const token = localStorage.getItem('avaia_staff');
+  try {
+    const r = await fetch('/api/settings/about-img', {
+      method: 'POST',
+      headers: token ? { 'Authorization': 'Bearer ' + token } : {},
+      body: form
+    });
+    const d = await r.json();
+    if (r.status === 401) { toast('Invalid admin session. Please log in again at /admin.','err'); return; }
+    if (d.ok) { setAboutImg(d.path); toast('Photo updated successfully.','ok'); }
+    else toast(d.error || 'Failed to upload photo.','err');
+  } catch(e) { toast('Connection error.','err'); }
+}
+
+function setAboutImg(src) {
+  const inner = document.getElementById('ab-img-inner');
+  if (inner) inner.innerHTML = `<img src="${src}" style="width:100%;height:100%;object-fit:cover;display:block" alt="About">`;
+}
+
+async function pageInit() {
+  if (ST.about1) document.getElementById('ab-p1').textContent = ST.about1;
+  if (ST.about2) document.getElementById('ab-p2').textContent = ST.about2;
+  if (ST.about3) document.getElementById('ab-p3').textContent = ST.about3;
+  if (ST.aboutImage) setAboutImg(ST.aboutImage);
+}
+</script>
+</body>
+</html>

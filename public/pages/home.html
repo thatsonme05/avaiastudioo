@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Avaia Studio</title>
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/home.css">
+  <script>window.PAGE_ID='home';</script>
+</head>
+<body>
+
+<!-- ════════ HORIZONTAL NAVBAR (home style) ════════ -->
+<nav class="home-nav" id="home-nav">
+  <!-- Left logo -->
+  <a href="/" class="home-nav-logo" id="hn-brand">
+    <img src="/img/logo.svg" class="brand-icon" alt="Avaia Studio">
+  </a>
+
+  <!-- Center menu -->
+  <div class="home-nav-links">
+    <a href="/" data-i18n="nav.home">Home</a>
+    <a href="/schedule" data-i18n="nav.schedule">Schedule</a>
+    <a href="/classes" data-i18n="nav.classes">Classes</a>
+    <a href="/pricing" data-i18n="nav.membership">Pricing</a>
+    <a href="/locate" data-i18n="nav.locate">Locate Us</a>
+    <a href="/about" data-i18n="nav.about.short">About</a>
+  </div>
+
+  <!-- Right auth -->
+  <div class="home-nav-right">
+    <button class="home-nav-btn" style="margin-right:8px" onclick="toggleLang()" id="hn-lang"></button>
+    <div id="hn-auth">
+      <button class="home-nav-btn" onclick="openMo('login-mo')" data-i18n="nav.loginsignup">Login / Sign Up</button>
+    </div>
+    <div class="home-nav-user" id="hn-user">
+      <span class="home-nav-username" id="hn-uname"></span>
+      <button class="home-nav-logout" onclick="doLogout()" data-i18n="nav.signout">Sign Out</button>
+    </div>
+    <!-- Mobile burger -->
+    <button class="home-nav-burger" id="hn-burger" onclick="toggleMobileMenu()">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- Mobile dropdown menu -->
+<div class="home-mobile-menu" id="hn-mobile">
+  <a href="/" onclick="closeMobileMenu()" data-i18n="nav.home">Home</a>
+  <a href="/schedule" onclick="closeMobileMenu()" data-i18n="nav.schedule">Schedule</a>
+  <a href="/classes" onclick="closeMobileMenu()" data-i18n="nav.classes">Classes</a>
+  <a href="/pricing" onclick="closeMobileMenu()" data-i18n="nav.membership">Pricing</a>
+  <a href="/locate" onclick="closeMobileMenu()" data-i18n="nav.locate">Locate Us</a>
+  <a href="/about" onclick="closeMobileMenu()" data-i18n="nav.about.short">About</a>
+  <button onclick="closeMobileMenu();openMo('login-mo')" data-i18n="nav.loginsignup">Login / Sign Up</button>
+</div>
+
+<!-- ════════ HERO SLIDESHOW ════════ -->
+<div class="hero-slide" id="hero-slide">
+  <div class="slide-track" id="slide-track">
+    <!-- Slides rendered by JS -->
+  </div>
+
+  <!-- Caption -->
+  <div class="slide-caption">
+    <div class="slide-caption-title" id="hero-title">Avaia Studio</div>
+    <div class="slide-caption-sub" id="hero-sub">Find peace in every movement</div>
+  </div>
+
+  <!-- Arrows -->
+  <button class="slide-arrow slide-prev" onclick="prevSlide()">
+    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+  </button>
+  <button class="slide-arrow slide-next" onclick="nextSlide()">
+    <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+  </button>
+
+  <!-- Dots -->
+  <div class="slide-dots" id="slide-dots"></div>
+</div>
+
+<!-- ════════ SCHEDULE TODAY ════════ -->
+<section class="home-section" style="padding-bottom:8px">
+  <div class="home-section-hd">
+    <div>
+      <p class="eye" data-i18n="home.happeningtoday">Happening Today</p>
+      <h2 class="h2" style="margin:0" id="today-heading" data-i18n="home.todaysschedule">Today's Schedule</h2>
+    </div>
+    <a href="/schedule" class="btn bo bsm" data-i18n="home.fullschedule">Full Schedule</a>
+  </div>
+  <div id="today-list" class="today-list">
+    <div class="skel" style="height:64px;margin-bottom:10px"></div>
+    <div class="skel" style="height:64px;margin-bottom:10px"></div>
+    <div class="skel" style="height:64px"></div>
+  </div>
+</section>
+
+<!-- ════════ CLASS PREVIEW ════════ -->
+<section class="home-section">
+  <div class="home-section-hd">
+    <div>
+      <p class="eye" data-i18n="home.whatweoffer">What we offer</p>
+      <h2 class="h2" style="margin:0" data-i18n="home.featuredclasses">Featured Classes</h2>
+    </div>
+    <a href="/classes" class="btn bo bsm" data-i18n="home.seeall">See all</a>
+  </div>
+  <div class="cls-grid3" id="cls-preview">
+    <div class="skel" style="height:180px"></div>
+    <div class="skel" style="height:180px"></div>
+    <div class="skel" style="height:180px"></div>
+  </div>
+</section>
+
+<!-- ════════ CTA ════════ -->
+<section class="home-section-dark" style="text-align:center">
+  <p class="eye" style="color:rgba(255,255,255,.3)" data-i18n="home.getstarted">Get started</p>
+  <h2 class="h2" style="color:#fff;margin-bottom:14px" data-i18n="home.readytostart">Ready to start your yoga journey?</h2>
+  <p style="color:rgba(255,255,255,.5);max-width:440px;margin:0 auto 32px;line-height:1.8;font-size:15px" data-i18n="home.ctadesc">
+    Sign up as a member, book classes, and track your yoga journey.
+  </p>
+  <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+    <button class="btn bp" onclick="openMo('reg-mo')" data-i18n="home.becomemember">Become a Member</button>
+    <a href="/schedule" class="btn bol" data-i18n="home.viewschedule">View Schedule</a>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer id="main-footer"></footer>
+
+<script src="/js/i18n.js"></script>
+<script src="/js/core.js?v=20260819retry1"></script>
+<script>
+/* ══ SLIDESHOW DATA ══ */
+// slides: array of { img: url|null, title, sub, gradient }
+let slides = [];
+let currentSlide = 0;
+let autoTimer    = null;
+
+function buildDefaultSlides() {
+  return [
+    { img: null, title: t('home.slide1.title'), sub: t('home.slide1.sub'), gradient: 'g1' },
+    { img: null, title: t('home.slide2.title'), sub: t('home.slide2.sub'), gradient: 'g2' },
+    { img: null, title: t('home.slide3.title'), sub: t('home.slide3.sub'), gradient: 'g3' },
+  ];
+}
+let DEFAULT_SLIDES = buildDefaultSlides();
+
+function buildSlides() {
+  const track = document.getElementById('slide-track');
+  const dots  = document.getElementById('slide-dots');
+  if (!track || !dots) return;
+
+  track.innerHTML = slides.map((s, i) => `
+    <div class="slide-item">
+      ${s.img
+        ? `<img src="${s.img}" class="slide-img" alt="Slide ${i+1}">`
+        : `<div class="slide-placeholder ${s.gradient || 'g1'}"></div>`
+      }
+    </div>`).join('');
+
+  dots.innerHTML = slides.map((_, i) =>
+    `<button class="slide-dot ${i===0?'active':''}" onclick="goSlide(${i})"></button>`
+  ).join('');
+
+  updateCaption();
+}
+
+function updateCaption() {
+  const s = slides[currentSlide];
+  if (!s) return;
+  const t = document.getElementById('hero-title');
+  const u = document.getElementById('hero-sub');
+  if (t) t.textContent = s.title;
+  if (u) u.textContent = s.sub;
+}
+
+function goSlide(idx) {
+  currentSlide = (idx + slides.length) % slides.length;
+  const track = document.getElementById('slide-track');
+  if (track) track.style.transform = `translateX(-${currentSlide * 100}%)`;
+  document.querySelectorAll('.slide-dot').forEach((d,i) => {
+    d.classList.toggle('active', i === currentSlide);
+  });
+  updateCaption();
+  resetAuto();
+}
+function nextSlide() { goSlide(currentSlide + 1); }
+function prevSlide() { goSlide(currentSlide - 1); }
+function resetAuto() {
+  clearInterval(autoTimer);
+  autoTimer = setInterval(() => nextSlide(), 5000);
+}
+
+/* ══ NAVBAR AUTH STATE ══ */
+function updateHomeNav() {
+  const authEl  = document.getElementById('hn-auth');
+  const userEl  = document.getElementById('hn-user');
+  const unameEl = document.getElementById('hn-uname');
+  const langEl  = document.getElementById('hn-lang');
+  if (langEl) langEl.textContent = getLang()==='en' ? 'ID' : 'EN';
+  if (!authEl || !userEl) return;
+  if (CU) {
+    authEl.style.display  = 'none';
+    userEl.style.display  = 'flex';
+    if (unameEl) unameEl.textContent = (CU.name || CU.email).split(' ')[0];
+  } else {
+    authEl.style.display  = 'block';
+    userEl.style.display  = 'none';
+  }
+}
+
+/* ══ MOBILE MENU ══ */
+function toggleMobileMenu() {
+  const m = document.getElementById('hn-mobile');
+  const b = document.getElementById('hn-burger');
+  if (!m) return;
+  const open = m.classList.toggle('open');
+  if (b) b.classList.toggle('open', open);
+}
+function closeMobileMenu() {
+  const m = document.getElementById('hn-mobile');
+  const b = document.getElementById('hn-burger');
+  if (m) m.classList.remove('open');
+  if (b) b.classList.remove('open');
+}
+
+/* ══ LOAD CLASSES PREVIEW ══ */
+async function loadClassesPreview() {
+  try {
+    const r = await fetch('/api/classes');
+    const d = await r.json();
+    const g = document.getElementById('cls-preview');
+    if (!g) return;
+    g.innerHTML = d.slice(0,3).map(c => `
+      <div class="cls-card3">
+        <p class="cls-tag3">${c.level}</p>
+        <h3 class="h3" style="margin-bottom:6px">${c.name}</h3>
+        <p style="font-size:13px;color:var(--mt)">${c.instructor}</p>
+        <div class="cls-ft3">
+          <span class="sm">${c.duration}</span>
+          <a href="/schedule" class="btn bp bsm">${t('home.book')}</a>
+        </div>
+      </div>`).join('');
+  } catch(e) {}
+}
+
+/* ══ TODAY'S SCHEDULE ══ */
+async function loadTodaySchedule() {
+  const list = document.getElementById('today-list');
+  if (!list) return;
+  try {
+    const r = await fetch('/api/schedule');
+    const all = await r.json();
+    const now = new Date();
+    const todayName = DAY[now.getDay()];
+    const dateStr = now.getDate() + ' ' + MON[now.getMonth()] + ' ' + now.getFullYear();
+
+    const heading = document.getElementById('today-heading');
+    if (heading) heading.textContent = todayName + ', ' + dateStr;
+
+    const isoToday = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+    const todays = all.filter(s => s.session_date ? s.session_date === isoToday : s.day === todayName).sort((a,b) => a.time.localeCompare(b.time));
+
+    if (!todays.length) {
+      list.innerHTML = `<div class="today-empty">${t('home.noclassestoday')} <a href="/schedule" style="color:var(--p);font-weight:600">${t('home.viewfullschedule')}</a> ${t('home.fordaysother')}</div>`;
+      return;
+    }
+
+    list.innerHTML = todays.map(s => {
+      const full = s.slots <= 0;
+      const low  = s.slots > 0 && s.slots <= 3;
+      const slotsLabel = full ? t('home.full') : s.slots + ' ' + t('home.spotsleft');
+      const slotsClass = full ? 'full' : low ? 'low' : '';
+      return `
+      <div class="today-row">
+        <div class="today-time">${s.time}</div>
+        <div class="today-info">
+          <div class="cname">${s.className || '—'}</div>
+          <div class="cinst">${s.instructor || ''}${s.duration ? ' · ' + s.duration : ''}</div>
+        </div>
+        <div class="today-slots ${slotsClass}">${slotsLabel}</div>
+        <button class="btn bp bsm" ${full ? 'disabled' : ''}
+          onclick="${full ? '' : `openBooking('${esc(s.id)}','${esc(s.className)}','${dateStr}','${s.time}','${esc(s.instructor)}',${s.slots},${s.price||85000})`}">
+          ${full ? t('home.full') : t('home.book')}
+        </button>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    list.innerHTML = `<div class="today-empty">${t('home.failedtoload')}</div>`;
+  }
+}
+
+/* ══ LOAD SLIDESHOW IMAGES FROM SETTINGS ══ */
+function loadSlideImages() {
+  // Hero images from settings: heroImage, heroImage2, heroImage3
+  const imgs = [ST.heroImage, ST.heroImage2, ST.heroImage3].filter(Boolean);
+
+  if (imgs.length > 0) {
+    // Merge: use uploaded images where available, fall back to default slides
+    slides = DEFAULT_SLIDES.map((s, i) => ({
+      ...s,
+      img: imgs[i] || null,
+    }));
+  } else {
+    slides = DEFAULT_SLIDES;
+  }
+  buildSlides();
+  resetAuto();
+}
+
+/* ══ PAGE INIT ══ */
+async function pageInit() {
+  // Apply studio name to nav
+
+  // Update default slide tagline
+  DEFAULT_SLIDES = buildDefaultSlides();
+  DEFAULT_SLIDES[0].title = ST.studioName || 'Avaia Studio';
+  DEFAULT_SLIDES[0].sub   = ST.tagline    || t('home.slide1.sub');
+
+  loadSlideImages();
+  updateHomeNav();
+  await Promise.all([loadClassesPreview(), loadTodaySchedule()]);
+  // Polling — keep today's slot counts fresh without a page reload
+  setInterval(loadTodaySchedule, 8000);
+}
+
+// Override onAfterLogin to update nav
+window.onAfterLogin = function() { updateHomeNav(); };
+</script>
+</body>
+</html>
