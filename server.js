@@ -1504,7 +1504,7 @@ app.get('/api/member-packages',requireAdmin,async(req,res)=>{
 app.post('/api/member-packages/manual',requireAdmin,async(req,res)=>{
   if(!USE_SB) return res.status(503).json({error:'Supabase is required for manual membership assignment.'});
   try{
-    const {member_id, package_id, start_date, price_paid, credits_total, validity_days, payment_type}=req.body||{};
+    const {member_id, package_id, start_date, price_paid, credits_total, credits_used, validity_days, payment_type}=req.body||{};
     if(!member_id || !package_id) return res.status(400).json({error:'Member and membership package are required.'});
 
     const {data:member,error:memberErr}=await supabase
@@ -1521,6 +1521,9 @@ app.post('/api/member-packages/manual',requireAdmin,async(req,res)=>{
     if(Number.isNaN(start.getTime())) return res.status(400).json({error:'Invalid start date.'});
 
     const credits=Math.max(1,parseInt(credits_total,10)||parseInt(pkg.credits,10)||1);
+    const usedRaw=parseInt(credits_used,10);
+    const used=Number.isFinite(usedRaw)?Math.max(0,usedRaw):0;
+    if(used>credits) return res.status(400).json({error:'Credits already used cannot exceed total credits.'});
     const validity=Math.max(1,parseInt(validity_days,10)||parseInt(pkg.validity_days,10)||30);
     const expires=new Date(start.getTime()+validity*24*60*60*1000);
     const price=(price_paid===''||price_paid==null)?(parseInt(pkg.price,10)||0):Math.max(0,parseInt(price_paid,10)||0);
@@ -1534,7 +1537,7 @@ app.post('/api/member-packages/manual',requireAdmin,async(req,res)=>{
       package_name:pkg.name,
       price_paid:price,
       credits_total:credits,
-      credits_used:0,
+      credits_used:used,
       payment_type:payment,
       purchased_at:start.toISOString(),
       expires_at:expires.toISOString(),

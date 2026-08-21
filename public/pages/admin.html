@@ -147,7 +147,7 @@
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;flex-wrap:wrap;gap:12px">
           <h2 class="adm-title" style="margin:0">Registered Members</h2>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn bp bsm" onclick="openManualPkgMo()">+ Add Member Membership</button>
+            <button class="btn bp bsm" id="btn-add-member-membership" type="button">+ Add Member Membership</button>
             <button class="btn bp bsm" onclick="document.getElementById('mb-import-fi').click()">Import Excel</button>
             <input type="file" id="mb-import-fi" accept=".xlsx,.xls,.csv" style="display:none" onchange="importMembers(this)">
             <button onclick="exportMembersExcel()" class="btn bo bsm">Export Excel</button>
@@ -461,7 +461,10 @@
       <div class="fg"><label class="fl">Price Paid (IDR)</label><input type="number" class="fi" id="mp-price" min="0"></div>
       <div class="fg"><label class="fl">Credits</label><input type="number" class="fi" id="mp-credits" min="1"></div>
     </div>
-    <div class="fg"><label class="fl">Validity (days)</label><input type="number" class="fi" id="mp-validity" min="1"></div>
+    <div class="fr">
+       <div class="fg"><label class="fl">Validity (days)</label><input type="number" class="fi" id="mp-validity" min="1"></div>
+       <div class="fg"><label class="fl">Credits Already Used</label><input type="number" class="fi" id="mp-used" min="0" value="0"></div>
+     </div>
     <p class="sm" id="mp-hint" style="margin:4px 0 16px"></p>
     <button class="btn bp" style="width:100%" onclick="saveManualPkg()">Activate Membership</button>
   </div>
@@ -517,6 +520,6 @@
 </div>
 
 <div id="_toast" class="toast"></div>
-<script src="/js/admin.js?v=20260819retry1"></script>
+<script src="/js/admin.js?v=20260821manualfix1"></script>
 </body>
 </html>

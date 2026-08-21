@@ -526,14 +526,25 @@ async function delSch(id){
 }
 
 /* ── MANUAL MEMBER MEMBERSHIP ── */
-function openManualPkgMo(){
-  const ms=document.getElementById('mp-member'), ps=document.getElementById('mp-package');
-  if(ms) ms.innerHTML=AMb.map(m=>`<option value="${m.id}">${m.name} — ${m.email}</option>`).join('');
-  if(ps) ps.innerHTML=AMsh.map(p=>`<option value="${p.id}">${p.name} — ${fmtRp(p.price)}</option>`).join('');
-  const d=new Date();
-  sv('mp-start',d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'));
-  prefillManualPackage();
-  openMo('manual-pkg-mo');
+async function openManualPkgMo(){
+  try{
+    // Refresh the source lists before opening so this button always works even
+    // when the admin panel was loaded from a cached/older state.
+    await Promise.all([loadAMb(), loadAMsh()]);
+    const ms=document.getElementById('mp-member'), ps=document.getElementById('mp-package');
+    if(ms) ms.innerHTML=AMb.map(m=>`<option value="${m.id}">${m.name} — ${m.email || m.phone || 'no contact'}</option>`).join('');
+    if(ps) ps.innerHTML=AMsh.map(p=>`<option value="${p.id}">${p.name} — ${fmtRp(p.price)}</option>`).join('');
+    if(!AMb.length){ toast('Belum ada member yang bisa dipilih. Tambahkan member terlebih dahulu.','err'); return; }
+    if(!AMsh.length){ toast('Belum ada membership package. Buat package terlebih dahulu.','err'); return; }
+    const d=new Date();
+    sv('mp-start',d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'));
+    sv('mp-used','0');
+    prefillManualPackage();
+    openMo('manual-pkg-mo');
+  }catch(e){
+    console.error('openManualPkgMo:',e);
+    toast('Tidak dapat membuka form membership manual. Silakan refresh halaman admin.','err');
+  }
 }
 function prefillManualPackage(){
   const p=AMsh.find(x=>x.id===gv('mp-package')); if(!p)return;
@@ -542,7 +553,7 @@ function prefillManualPackage(){
   if(h) h.textContent=`Default: ${p.credits||1} credits · ${p.validity_days||30} days. You can override these for this manual sale.`;
 }
 async function saveManualPkg(){
-  const body={member_id:gv('mp-member'),package_id:gv('mp-package'),start_date:gv('mp-start'),price_paid:gv('mp-price'),credits_total:gv('mp-credits'),validity_days:gv('mp-validity'),payment_type:gv('mp-payment')};
+  const body={member_id:gv('mp-member'),package_id:gv('mp-package'),start_date:gv('mp-start'),price_paid:gv('mp-price'),credits_total:gv('mp-credits'),credits_used:gv('mp-used'),validity_days:gv('mp-validity'),payment_type:gv('mp-payment')};
   if(!body.member_id||!body.package_id||!body.start_date){toast('Member, package and start date are required.','err');return;}
   try{
     const r=await fetch('/api/member-packages/manual',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
@@ -943,6 +954,10 @@ function sw(id,btn){
 }
 
 document.addEventListener('DOMContentLoaded', async ()=>{
+  const manualMembershipButton = document.getElementById('btn-add-member-membership');
+  if(manualMembershipButton){
+    manualMembershipButton.addEventListener('click', () => { openManualPkgMo(); });
+  }
   loadCurrentStaff();
   const token = localStorage.getItem('avaia_staff');
 
