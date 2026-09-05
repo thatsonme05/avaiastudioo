@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Payment — Avaia Studio</title>
+  <link rel="stylesheet" href="/css/global.css">
+  <style>
+    @keyframes pf-spin{to{transform:rotate(360deg)}}
+    .pf-spinner{width:72px;height:72px;border:2px solid var(--ln,#DDD5CA);border-top-color:var(--p,#5D3A24);border-radius:50%;margin:0 auto 24px;animation:pf-spin .8s linear infinite}
+    .pf-icon{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 24px}
+  </style>
+</head>
+<body style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg)">
+  <div style="text-align:center;padding:40px 24px;max-width:480px">
+    <div id="pf-visual">
+      <div class="pf-spinner"></div>
+    </div>
+    <h1 style="font-family:var(--fd);font-size:32px;font-weight:600;margin-bottom:12px" id="pf-title">Confirming your payment…</h1>
+    <p style="color:var(--mt);font-size:15px;line-height:1.8;margin-bottom:8px" id="pf-msg">Please wait a moment while we check with the payment provider.</p>
+    <p style="color:var(--mt);font-size:13px;margin-bottom:32px" id="pf-order"></p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap" id="pf-actions"></div>
+  </div>
+  <script>
+    const params  = new URLSearchParams(window.location.search);
+    const orderId = params.get('order_id') || params.get('orderId');
+    const urlStatus = params.get('transaction_status');
+    const simulated  = params.get('simulated');
+
+    const visualEl  = document.getElementById('pf-visual');
+    const titleEl   = document.getElementById('pf-title');
+    const msgEl     = document.getElementById('pf-msg');
+    const orderEl   = document.getElementById('pf-order');
+    const actionsEl = document.getElementById('pf-actions');
+
+    if (orderId) orderEl.textContent = 'Order ID: ' + orderId;
+
+    function showIcon(kind){
+      // kind: 'ok' | 'warn' | 'fail'
+      const stroke = kind==='ok' ? '#4a7a48' : kind==='warn' ? '#a9772f' : '#a33d3d';
+      const border = kind==='ok' ? 'var(--ok,#4a7a48)' : kind==='warn' ? '#a9772f' : '#a33d3d';
+      const path = kind==='ok'
+        ? '<polyline points="20 6 9 17 4 12"/>'
+        : kind==='warn'
+        ? '<line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="16.5" x2="12" y2="16.6"/>'
+        : '<line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/>';
+      visualEl.innerHTML = `<div class="pf-icon" style="border:2px solid ${border}">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="${stroke}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${path}</svg>
+      </div>`;
+    }
+
+    function renderActions(buttons){
+      actionsEl.innerHTML = buttons.map(b => `<a href="${b.href}" class="btn ${b.cls}">${b.label}</a>`).join('');
+    }
+
+    function fmtDate(iso){
+      try{ return new Date(iso).toLocaleDateString('en-US',{day:'numeric',month:'long',year:'numeric'}); }
+      catch(e){ return ''; }
+    }
+
+    function renderSuccess(payload){
+      showIcon('ok');
+      if (payload.package) {
+        const p = payload.package;
+        titleEl.textContent = 'Membership Active!';
+        msgEl.textContent = `${p.package_name} is now active — ${p.credits_total} class credit${p.credits_total===1?'':'s'}, valid until ${fmtDate(p.expires_at)}.`;
+      } else if (payload.booking) {
+        const b = payload.booking;
+        titleEl.textContent = 'Booking Confirmed!';
+        msgEl.textContent = `You're booked for ${b.class||'your class'}${b.date?' on '+b.date:''}${b.time?' at '+b.time:''}.`;
+      } else {
+        titleEl.textContent = 'Payment Successful!';
+        msgEl.textContent = 'Your payment has been confirmed.';
+      }
+      renderActions([
+        {href:'/dashboard', cls:'bp', label:'View Dashboard'},
+        {href:'/schedule',  cls:'bo', label:'Book Another Class'},
+      ]);
+    }
+
+    function renderStillPending(){
+      showIcon('warn');
+      titleEl.textContent = 'Payment Received — Confirming…';
+      msgEl.textContent = "We've received your payment and it's being finalized. This can take a minute — check your dashboard shortly, or refresh this page.";
+      renderActions([
+        {href:'/dashboard', cls:'bp', label:'View Dashboard'},
+        {href:window.location.href, cls:'bo', label:'Refresh'},
+      ]);
+    }
+
+    function renderCancelled(){
+      showIcon('fail');
+      titleEl.textContent = 'Payment Not Completed';
+      msgEl.textContent = 'This payment was cancelled, denied, or expired before it was completed. No charge should have been made — please try again.';
+      renderActions([
+        {href:'/pricing', cls:'bp', label:'Back to Pricing'},
+        {href:'/schedule', cls:'bo', label:'Back to Schedule'},
+      ]);
+    }
+
+    function renderNotFound(){
+      showIcon('warn');
+      titleEl.textContent = "Couldn't Find This Payment";
+      msgEl.textContent = orderId
+        ? "We couldn't find a matching transaction for this order. If you completed a payment, check your dashboard — it may still be a moment behind."
+        : 'No order was specified.';
+      renderActions([
+        {href:'/dashboard', cls:'bp', label:'View Dashboard'},
+        {href:'/', cls:'bo', label:'Back Home'},
+      ]);
+    }
+
+    function renderCheckFailed(){
+      showIcon('warn');
+      titleEl.textContent = 'Payment Received';
+      msgEl.textContent = "We couldn't verify the final status just now, but your payment has been received. Please check your dashboard in a moment.";
+      renderActions([
+        {href:'/dashboard', cls:'bp', label:'View Dashboard'},
+        {href:window.location.href, cls:'bo', label:'Try Again'},
+      ]);
+    }
+
+    async function checkStatus(){
+      const r = await fetch('/api/payment/status/' + encodeURIComponent(orderId));
+      if (r.status === 404) return { notFound:true };
+      if (!r.ok) throw new Error('status check failed: ' + r.status);
+      return await r.json();
+    }
+
+    const ACTIVE_STATES    = ['active','confirmed'];
+    const CANCELLED_PREFIX = 'cancelled_';
+
+    async function poll(attempt){
+      try{
+        const data = await checkStatus();
+        if (data.notFound) return renderNotFound();
+
+        if (ACTIVE_STATES.includes(data.status)) return renderSuccess(data);
+        if (String(data.status||'').startsWith(CANCELLED_PREFIX) || data.status==='deny' || data.status==='expire') return renderCancelled();
+
+        // Still pending — the server already tried an active check with the
+        // payment provider when we called it. Retry a few times in case that
+        // needs a moment to catch up, then settle into an honest "still
+        // processing" state instead of pretending it's done.
+        if (attempt < 5) { setTimeout(() => poll(attempt+1), 2000); return; }
+        renderStillPending();
+      }catch(e){
+        if (attempt < 2) { setTimeout(() => poll(attempt+1), 1500); return; }
+        renderCheckFailed();
+      }
+    }
+
+    if (!orderId) {
+      renderNotFound();
+    } else if (simulated) {
+      msgEl.textContent = 'Simulated payment — checking the result…';
+      poll(0);
+    } else if (urlStatus === 'deny' || urlStatus === 'cancel' || urlStatus === 'expire') {
+      renderCancelled();
+    } else {
+      poll(0);
+    }
+  </script>
+</body>
+</html>

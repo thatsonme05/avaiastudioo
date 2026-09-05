@@ -1,0 +1,60 @@
+/* admin.css */
+#gate { display:none; min-height:100vh; align-items:center; justify-content:center; background:var(--bg); }
+.gate-box { width:100%; max-width:360px; padding:20px; }
+.gate-logo { display:flex; align-items:center; justify-content:center; margin-bottom:4px; }
+.gate-sub  { font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--mt); text-align:center; margin-bottom:28px; }
+.gate-err  { display:none; margin-top:12px; padding:10px; background:#fde8e8; color:#b52b2b; font-size:13px; text-align:center; }
+#adm { display:none; flex-direction:column; min-height:100vh; }
+.adm-layout { display:flex; flex-direction:column; min-height:100vh; }
+.adm-top { display:flex; align-items:center; justify-content:space-between; padding:0 32px; height:52px; background:var(--p); color:#fff; flex-shrink:0; }
+.adm-top-brand { display:flex; align-items:center; }
+.adm-top-r { display:flex; gap:10px; align-items:center; }
+.adm-db-badge { font-size:10px; letter-spacing:.1em; text-transform:uppercase; opacity:.55; }
+.adm-body { flex:1; display:grid; grid-template-columns:200px 1fr; overflow:hidden; height:calc(100vh - 52px); }
+.adm-side { background:var(--wh); border-right:1px solid var(--ln); padding:20px 0; overflow-y:auto; }
+.adm-side-sect { font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--mt); padding:0 20px; margin:14px 0 6px; }
+.adm-link { display:block; width:100%; text-align:left; padding:10px 20px; font-size:13px; color:var(--mt); background:none; border:none; border-left:2px solid transparent; cursor:pointer; transition:all .18s; }
+.adm-link:hover,.adm-link.active { color:var(--p); border-left-color:var(--p); background:var(--bg); font-weight:500; }
+.adm-content { padding:36px; overflow-y:auto; }
+.adm-panel  { display:none; }
+.adm-panel.active { display:block; }
+.adm-title  { font-family:var(--fd); font-size:28px; font-weight:600; margin-bottom:24px; }
+.adm-stats  { display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--ln); margin-bottom:28px; }
+.ast { background:var(--wh); padding:20px; }
+.ast-n { font-family:var(--fd); font-size:32px; font-weight:600; color:var(--p); }
+.ast-l { font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--mt); margin-top:4px; }
+.set-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+.set-card { background:var(--wh); border:1px solid var(--ln); padding:24px; }
+.set-ttl { font-family:var(--fd); font-size:18px; font-weight:600; margin-bottom:18px; padding-bottom:12px; border-bottom:1px solid var(--ln); }
+.img-prev { width:100%; height:190px; background:var(--sd); display:flex; align-items:center; justify-content:center; color:var(--mt); font-size:13px; margin-bottom:12px; overflow:hidden; }
+.day-lbl  { font-size:11px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--p); background:var(--bg); padding:8px 14px; }
+@media(max-width:1024px){
+  .adm-content { padding:24px; }
+  .adm-stats { grid-template-columns:repeat(2,1fr); }
+}
+@media(max-width:768px){
+  .adm-body { grid-template-columns:1fr; height:auto; }
+  .adm-side { display:flex; overflow-x:auto; height:auto; padding:0; border-right:none; border-bottom:1px solid var(--ln); }
+  .adm-side-sect { display:none; }
+  .adm-link { white-space:nowrap; border-left:none; padding:10px 14px; }
+  .adm-stats { grid-template-columns:1fr 1fr; }
+  .set-grid  { grid-template-columns:1fr; }
+  .adm-content { padding:20px; }
+}
+
+.fb-count-badge {
+  display: inline-block; background: var(--p); color: #fff;
+  font-size: 10px; padding: 1px 6px; border-radius: 10px; margin-left: 6px;
+}
+
+/* Segmented control (e.g. Weekly / Monthly toggle in Analytics) */
+.seg { display:inline-flex; background:var(--bg); border:1px solid var(--ln); border-radius:8px; padding:2px; }
+.seg-btn { border:none; background:transparent; padding:6px 14px; font-size:13px; border-radius:6px; cursor:pointer; color:var(--s); font-family:inherit; }
+.seg-btn.active { background:var(--p); color:#fff; }
+.seg-btn:not(.active):hover { background:var(--ln); }
+
+/* Notification bell di top bar admin (background maroon gelap) */
+.adm-top-r .notif-bell{ background:rgba(255,255,255,.12); border-color:rgba(255,255,255,.25); color:#fff; width:32px; height:32px; }
+.adm-top-r .notif-bell:hover{ background:rgba(255,255,255,.22); }
+.adm-top-r .notif-bell svg{ width:15px; height:15px; }
+.adm-top-r .notif-panel{ color:var(--s); }

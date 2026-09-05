@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Admin — Avaia Studio</title>
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+
+<!-- GATE -->
+<div id="gate">
+  <div class="gate-box">
+    <div class="gate-logo">
+      <img src="/img/logo-dark.svg" class="brand-icon" alt="Avaia Studio">
+    </div>
+    <div class="gate-sub">Staff Dashboard</div>
+    <div class="fg"><label class="fl">Username</label>
+      <input type="text" class="fi" id="g-user" placeholder="your username" onkeydown="if(event.key==='Enter')gateLogin()">
+    </div>
+    <div class="fg"><label class="fl">Password</label>
+      <input type="password" class="fi" id="g-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')gateLogin()">
+    </div>
+    <button class="btn bp" style="width:100%" onclick="gateLogin()">Sign In to Dashboard</button>
+    <div id="gate-err" class="gate-err"></div>
+    <p style="text-align:center;margin-top:18px;font-size:12px;color:var(--mt)">For Avaia Studio Administrators & Instructors</p>
+    <p style="text-align:center;margin-top:6px"><a href="/" class="sm" style="color:var(--mt)">← Back to website</a></p>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="adm" class="adm-layout">
+  <header class="adm-top">
+    <span class="adm-top-brand">
+      <img src="/img/logo.svg" class="brand-icon" alt="Avaia Studio">
+    </span>
+    <div class="adm-top-r">
+      <div class="notif-wrap">
+        <button class="notif-bell" id="notif-bell" onclick="toggleNotifPanel()" aria-label="Notifications">
+          <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span class="notif-dot" id="notif-dot"></span>
+        </button>
+        <div class="notif-panel" id="notif-panel">
+          <div class="notif-panel-head"><strong>Notifications</strong><button class="notif-mark-all" onclick="markAllNotifsRead(event)">Mark all as read</button></div>
+          <div class="notif-list" id="notif-list"><div class="notif-empty">Loading...</div></div>
+        </div>
+      </div>
+      <span id="adm-whoami" class="adm-db-badge" style="opacity:1;font-weight:500"></span>
+      <span id="adm-db" class="adm-db-badge"></span>
+      <span id="adm-mt" class="adm-db-badge"></span>
+      <a href="/" class="btn bol bsm" style="text-decoration:none">View Website</a>
+      <button class="btn bol bsm" onclick="gateLogout()">Sign Out</button>
+    </div>
+  </header>
+  <div class="adm-body">
+    <aside class="adm-side" id="adm-sidebar">
+      <!-- Populated automatically by admin.js based on role (admin / instructor) -->
+    </aside>
+    <main class="adm-content">
+
+      <!-- DASHBOARD -->
+      <div class="adm-panel active" id="adm-dashboard">
+        <h2 class="adm-title">Dashboard</h2>
+        <div class="adm-stats">
+          <div class="ast"><div class="ast-n" id="s-bk">—</div><div class="ast-l">Bookings</div></div>
+          <div class="ast"><div class="ast-n" id="s-mb">—</div><div class="ast-l">Members</div></div>
+          <div class="ast"><div class="ast-n" id="s-cl">—</div><div class="ast-l">Classes</div></div>
+          <div class="ast"><div class="ast-n" id="s-rev">—</div><div class="ast-l">Total Revenue</div></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <h3 class="h4">Recent Bookings</h3>
+          <div style="display:flex;gap:8px">
+            <button onclick="exportExcel()" class="btn bo bsm">Export Excel </button>
+            <button onclick="exportBookingsCSV()" class="btn bo bsm">Export CSV</button>
+          </div>
+        </div>
+        <div class="tw"><table class="tbl"><thead><tr><th>Name</th><th>Class</th><th>Date</th><th>Time</th><th>Price</th><th>Status</th></tr></thead><tbody id="dash-bk"></tbody></table></div>
+      </div>
+
+      <!-- ANALYTICS -->
+      <div class="adm-panel" id="adm-analytics">
+        <h2 class="adm-title">Analytics</h2>
+
+        <div class="adm-stats" style="margin-bottom:28px">
+          <div class="ast">
+            <div class="ast-n" id="an-rev">—</div>
+            <div class="ast-l">Total Revenue <span id="an-rev-grow"></span></div>
+            <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-top:10px">
+              <div class="fg" style="margin:0">
+                <label class="fl" style="font-size:11px">Date</label>
+                <input type="date" class="fi" id="an-rev-f-date" style="min-width:140px;font-size:12px;padding:4px 6px" onchange="onAnRevDateFilterChange()">
+              </div>
+              <div class="fg" style="margin:0">
+                <label class="fl" style="font-size:11px">Month</label>
+                <select class="fs fi" id="an-rev-f-month" style="min-width:120px;font-size:12px;padding:4px 6px" onchange="applyRevenueFilter()">
+                  <option value="">All Months</option>
+                  <option value="1">January</option><option value="2">February</option>
+                  <option value="3">March</option><option value="4">April</option>
+                  <option value="5">May</option><option value="6">June</option>
+                  <option value="7">July</option><option value="8">August</option>
+                  <option value="9">September</option><option value="10">October</option>
+                  <option value="11">November</option><option value="12">December</option>
+                </select>
+              </div>
+              <div class="fg" style="margin:0">
+                <label class="fl" style="font-size:11px">Year</label>
+                <select class="fs fi" id="an-rev-f-year" style="min-width:100px;font-size:12px;padding:4px 6px" onchange="applyRevenueFilter()">
+                  <option value="">All Years</option>
+                </select>
+              </div>
+              <button type="button" class="btn bo bsm" style="font-size:12px;padding:4px 10px" onclick="clearRevenueFilter()">Clear Filters</button>
+            </div>
+          </div>
+          <div class="ast"><div class="ast-n" id="an-avg">—</div><div class="ast-l">Average / Booking</div></div>
+          <div class="ast"><div class="ast-n" id="an-canc">—</div><div class="ast-l">Cancellation Rate</div></div>
+          <div class="ast"><div class="ast-n" id="an-occ">—</div><div class="ast-l">Class Occupancy</div></div>
+          <div class="ast"><div class="ast-n" id="an-active-pkg">—</div><div class="ast-l">Active Packages</div></div>
+        </div>
+
+        <div class="set-card" style="margin-bottom:24px">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+            <div class="set-ttl" id="an-rev-chart-ttl" style="margin:0">Revenue — Last 12 Months</div>
+            <div class="seg" role="tablist" aria-label="Revenue period">
+              <button type="button" class="seg-btn active" id="an-period-monthly" onclick="setAnalyticsPeriod('monthly')">Monthly</button>
+              <button type="button" class="seg-btn" id="an-period-weekly" onclick="setAnalyticsPeriod('weekly')">Weekly</button>
+            </div>
+          </div>
+          <div class="bchart" id="an-monthly-chart" style="margin-top:14px"></div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px">
+          <div class="set-card">
+            <div class="set-ttl">Most Popular Classes</div>
+            <div id="an-top-classes"></div>
+          </div>
+          <div class="set-card">
+            <div class="set-ttl">Instructor Performance</div>
+            <div id="an-instructors"></div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px">
+          <div class="set-card">
+            <div class="set-ttl">Bookings by Day (Weekly Schedule)</div>
+            <div class="bchart" id="an-day-chart"></div>
+          </div>
+          <div class="set-card">
+            <div class="set-ttl">Busiest Hours</div>
+            <div class="bchart" id="an-hour-chart"></div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+          <div class="set-card">
+            <div class="set-ttl">Member Growth (6 Months)</div>
+            <div class="bchart" id="an-member-chart"></div>
+          </div>
+          <div class="set-card">
+            <div class="set-ttl">Membership Type Distribution</div>
+            <div id="an-membership-dist"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOOKINGS -->
+      <div class="adm-panel" id="adm-bookings">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;flex-wrap:wrap;gap:12px">
+          <h2 class="adm-title" style="margin:0">All Bookings</h2>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn bp bsm" onclick="document.getElementById('bk-import-fi').click()">Import Excel</button>
+            <input type="file" id="bk-import-fi" accept=".xlsx,.xls,.csv" style="display:none" onchange="importBookings(this)">
+            <button onclick="exportExcel()" class="btn bo bsm">Export Excel</button>
+            <button onclick="exportBookingsCSV()" class="btn bo bsm">Export CSV</button>
+            <button onclick="reconcilePending()" class="btn bo bsm" id="reconcile-btn" title="Re-checks every pending booking/membership payment directly with Midtrans, and finalizes any that were actually paid but never got confirmed.">Check Pending Payments</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:18px">
+          <div class="fg" style="margin:0">
+            <label class="fl">Date</label>
+            <input type="date" class="fi" id="bk-f-date" style="min-width:150px" onchange="onBkDateFilterChange()">
+          </div>
+          <div class="fg" style="margin:0">
+            <label class="fl">Month</label>
+            <select class="fs fi" id="bk-f-month" style="min-width:140px" onchange="renderABkTable()">
+              <option value="">All Months</option>
+              <option value="1">January</option><option value="2">February</option>
+              <option value="3">March</option><option value="4">April</option>
+              <option value="5">May</option><option value="6">June</option>
+              <option value="7">July</option><option value="8">August</option>
+              <option value="9">September</option><option value="10">October</option>
+              <option value="11">November</option><option value="12">December</option>
+            </select>
+          </div>
+          <div class="fg" style="margin:0">
+            <label class="fl">Year</label>
+            <select class="fs fi" id="bk-f-year" style="min-width:110px" onchange="renderABkTable()">
+              <option value="">All Years</option>
+            </select>
+          </div>
+          <button class="btn bo bsm" onclick="clearBkFilters()">Clear Filters</button>
+          <span id="bk-f-count" style="color:var(--mt);font-size:13px;margin-left:4px"></span>
+        </div>
+        <div id="reconcile-result" style="display:none;margin-bottom:16px;padding:14px 16px;background:var(--bg2,#fdf8f6);border:1px solid var(--ln,#ddd5ca);font-size:13.5px;line-height:1.7"></div>
+        <div class="tw"><table class="tbl"><thead><tr><th>Name</th><th>Class</th><th>Date</th><th>Time</th><th>WA</th><th>Price</th><th>Payment</th><th>Status</th><th></th></tr></thead><tbody id="all-bk-body"></tbody></table></div>
+      </div>
+
+      <!-- MEMBERS -->
+      <div class="adm-panel" id="adm-members">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;flex-wrap:wrap;gap:12px">
+          <h2 class="adm-title" style="margin:0">Registered Members</h2>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn bp bsm" id="btn-add-member-membership" type="button">+ Add Member Membership</button>
+            <button class="btn bp bsm" onclick="document.getElementById('mb-import-fi').click()">Import Excel</button>
+            <input type="file" id="mb-import-fi" accept=".xlsx,.xls,.csv" style="display:none" onchange="importMembers(this)">
+            <button onclick="exportMembersExcel()" class="btn bo bsm">Export Excel</button>
+          </div>
+        </div>
+        <div class="tw"><table class="tbl"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Membership Type</th><th>Active Package</th><th>Joined</th><th></th></tr></thead><tbody id="mb-body"></tbody></table></div>
+      </div>
+
+      <!-- MEMBERSHIP PACKAGES -->
+      <div class="adm-panel" id="adm-memberships">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:22px">
+          <h2 class="adm-title" style="margin:0">Membership Packages</h2>
+          <button class="btn bp bsm" onclick="openMshMo()">+ Add Package</button>
+        </div>
+        <p class="sm" style="margin-bottom:20px">These packages will be shown on the Membership page (/pricing).</p>
+        <div class="tw"><table class="tbl"><thead><tr><th>Package Name</th><th>Price</th><th>Duration</th><th>Features</th><th></th></tr></thead><tbody id="msh-body"></tbody></table></div>
+      </div>
+
+      <!-- FEEDBACK -->
+      <div class="adm-panel" id="adm-feedback">
+        <h2 class="adm-title">Feedback</h2>
+        <div id="fb-list"></div>
+      </div>
+
+      <!-- REPORTS -->
+      <div class="adm-panel" id="adm-reports">
+        <h2 class="adm-title">Monthly Reports</h2>
+        <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:28px">
+          <div class="fg" style="margin:0">
+            <label class="fl">Month</label>
+            <select class="fs fi" id="rpt-month" style="min-width:140px">
+              <option value="1">January</option><option value="2">February</option>
+              <option value="3">March</option><option value="4">April</option>
+              <option value="5">May</option><option value="6">June</option>
+              <option value="7">July</option><option value="8">August</option>
+              <option value="9">September</option><option value="10">October</option>
+              <option value="11">November</option><option value="12">December</option>
+            </select>
+          </div>
+          <div class="fg" style="margin:0">
+            <label class="fl">Year</label>
+            <input type="number" class="fi" id="rpt-year" style="width:90px" placeholder="2026">
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn bp bsm" onclick="loadReport()">Show</button>
+            <button class="btn bo bsm" onclick="exportReport()">Export Excel</button>
+          </div>
+        </div>
+        <p id="rpt-hint" style="color:var(--mt);font-size:14px">Select a month and year, then click Show.</p>
+        <div id="rpt-result" style="display:none">
+          <div class="adm-stats" style="margin-bottom:28px">
+            <div class="ast"><div class="ast-n" id="rpt-total">—</div><div class="ast-l">Total Bookings</div></div>
+            <div class="ast"><div class="ast-n" id="rpt-conf">—</div><div class="ast-l">Confirmed</div></div>
+            <div class="ast"><div class="ast-n" id="rpt-canc">—</div><div class="ast-l">Cancelled</div></div>
+            <div class="ast"><div class="ast-n" id="rpt-rev">—</div><div class="ast-l">Total Revenue</div></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+            <div>
+              <h3 class="h4" style="margin-bottom:14px">Top 5 Busiest Classes</h3>
+              <div class="tw"><table class="tbl"><thead><tr><th>Class</th><th>Bookings</th></tr></thead>
+              <tbody id="rpt-classes"></tbody></table></div>
+            </div>
+            <div>
+              <h3 class="h4" style="margin-bottom:14px">Bookings by Day</h3>
+              <div class="tw"><table class="tbl"><thead><tr><th>Date</th><th>Bookings</th><th>Revenue</th></tr></thead>
+              <tbody id="rpt-daily"></tbody></table></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EMAIL -->
+      <div class="adm-panel" id="adm-email">
+        <h2 class="adm-title">Email & Notifications</h2>
+        <div class="set-grid">
+          <div class="set-card">
+            <div class="set-ttl">Email Status</div>
+            <div id="email-status" style="font-size:14px;color:var(--mt);line-height:2.2">Loading...</div>
+          </div>
+          <div class="set-card">
+            <div class="set-ttl">Send Reminders</div>
+            <p class="sm" style="margin-bottom:16px">Send a reminder email to all members who haven't received one yet. Run this daily, or set up a cron job on the server.</p>
+            <button class="btn bp bsm" onclick="sendReminders()">Send Reminders Now</button>
+            <div id="reminder-result" style="margin-top:12px;font-size:13px;color:var(--mt)"></div>
+          </div>
+          <div class="set-card" style="grid-column:span 2">
+            <div class="set-ttl">How to Enable Email</div>
+            <p class="sm" style="line-height:2">
+              Fill in the following variables in the <strong>.env</strong> file, then restart the server:<br>
+              <code style="background:var(--bg);padding:3px 8px;margin:2px 0;display:inline-block">EMAIL_HOST=smtp.gmail.com</code><br>
+              <code style="background:var(--bg);padding:3px 8px;margin:2px 0;display:inline-block">EMAIL_PORT=587</code><br>
+              <code style="background:var(--bg);padding:3px 8px;margin:2px 0;display:inline-block">EMAIL_USER=studio@gmail.com</code><br>
+              <code style="background:var(--bg);padding:3px 8px;margin:2px 0;display:inline-block">EMAIL_PASS=16-character-app-password</code><br>
+              <code style="background:var(--bg);padding:3px 8px;margin:2px 0;display:inline-block">EMAIL_FROM=Avaia Studio &lt;studio@gmail.com&gt;</code><br><br>
+              For Gmail: enable 2FA → Google Account → Security → App passwords → create a new password for "Mail".
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCHEDULE -->
+      <div class="adm-panel" id="adm-schedule">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:22px">
+          <h2 class="adm-title" style="margin:0">Class Schedule</h2>
+          <button class="btn bp bsm" onclick="openSchMo()">+ Add Session</button>
+        </div>
+        <div id="sch-list"></div>
+      </div>
+
+      <!-- CLASSES -->
+      <div class="adm-panel" id="adm-classes">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:22px">
+          <h2 class="adm-title" style="margin:0">Class Management</h2>
+          <button class="btn bp bsm" onclick="openClsMo()">+ Add Class</button>
+        </div>
+        <div class="tw"><table class="tbl"><thead><tr><th>Name</th><th>Instructor</th><th>Level</th><th>Duration</th><th>Price</th><th>Capacity</th><th></th></tr></thead><tbody id="cls-body"></tbody></table></div>
+      </div>
+
+      <!-- MANAGE STAFF -->
+      <div class="adm-panel" id="adm-staff">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:22px">
+          <h2 class="adm-title" style="margin:0">Manage Staff</h2>
+          <button class="btn bp bsm" onclick="openStaffMo()">+ Add Staff Account</button>
+        </div>
+        <p class="sm" style="margin-bottom:20px">Create accounts for instructors so they can manage their own schedule and classes. Instructors can only access the Schedule and Classes menus — they cannot view booking data, members, or studio settings.</p>
+        <div class="tw"><table class="tbl"><thead><tr><th>Name</th><th>Username</th><th>Email</th><th>Role</th><th>Specialty</th><th>Status</th><th></th></tr></thead><tbody id="staff-body"></tbody></table></div>
+      </div>
+
+      <!-- APPEARANCE -->
+      <div class="adm-panel" id="adm-appearance">
+        <h2 class="adm-title">Appearance & Colors</h2>
+        <div class="set-grid">
+          <div class="set-card">
+            <div class="set-ttl">Studio Name</div>
+            <div class="fg"><label class="fl">Name</label><input type="text" class="fi" id="sn-name"></div>
+            <div class="fg"><label class="fl">Tagline</label><input type="text" class="fi" id="sn-tag"></div>
+            <button class="btn bp bsm" onclick="saveName()">Save</button>
+          </div>
+          <div class="set-card">
+            <div class="set-ttl">Colors</div>
+            <div class="fg"><label class="fl">Primary Color</label>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input type="color" id="sc-p" style="width:40px;height:34px;border:1px solid var(--ln);padding:2px;cursor:pointer">
+                <input type="text" class="fi" id="sc-ph" placeholder="#5D3A24" style="flex:1">
+              </div></div>
+            <div class="fg"><label class="fl">Accent Color</label>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input type="color" id="sc-a" style="width:40px;height:34px;border:1px solid var(--ln);padding:2px;cursor:pointer">
+                <input type="text" class="fi" id="sc-ah" placeholder="#9C6B3D" style="flex:1">
+              </div></div>
+            <div class="fg"><label class="fl">Background</label>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input type="color" id="sc-bg" style="width:40px;height:34px;border:1px solid var(--ln);padding:2px;cursor:pointer">
+                <input type="text" class="fi" id="sc-bh" placeholder="#FDF8F6" style="flex:1">
+              </div></div>
+            <button class="btn bp bsm" onclick="saveColors()">Apply Colors</button>
+          </div>
+          <div class="set-card" style="grid-column:span 2">
+            <div class="set-ttl">Homepage Slideshow Photos (max 3 photos)</div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:8px">
+              <div>
+                <div class="sm" style="margin-bottom:6px;font-weight:500">Photo 1</div>
+                <div id="hero-prev1" class="img-prev" style="height:120px">None yet</div>
+                <input type="file" id="hero-fi1" accept="image/*" style="display:none" onchange="uploadHeroN(this,1)">
+                <button class="btn bo bsm" style="width:100%;margin-top:6px" onclick="document.getElementById('hero-fi1').click()">Upload</button>
+              </div>
+              <div>
+                <div class="sm" style="margin-bottom:6px;font-weight:500">Photo 2</div>
+                <div id="hero-prev2" class="img-prev" style="height:120px">None yet</div>
+                <input type="file" id="hero-fi2" accept="image/*" style="display:none" onchange="uploadHeroN(this,2)">
+                <button class="btn bo bsm" style="width:100%;margin-top:6px" onclick="document.getElementById('hero-fi2').click()">Upload</button>
+              </div>
+              <div>
+                <div class="sm" style="margin-bottom:6px;font-weight:500">Photo 3</div>
+                <div id="hero-prev3" class="img-prev" style="height:120px">None yet</div>
+                <input type="file" id="hero-fi3" accept="image/*" style="display:none" onchange="uploadHeroN(this,3)">
+                <button class="btn bo bsm" style="width:100%;margin-top:6px" onclick="document.getElementById('hero-fi3').click()">Upload</button>
+              </div>
+            </div>
+          </div>
+          <div class="set-card" style="grid-column:span 2">
+            <div class="set-ttl">About Us Photo</div>
+            <div id="about-prev" class="img-prev">No photo yet</div>
+            <input type="file" id="about-fi" accept="image/*" style="display:none" onchange="uploadAbout(this)">
+            <button class="btn bo bsm" onclick="document.getElementById('about-fi').click()">Choose About Us Photo</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONTENT -->
+      <div class="adm-panel" id="adm-content">
+        <h2 class="adm-title">Content & Studio Info</h2>
+        <div class="set-grid">
+          <div class="set-card" style="grid-column:span 2">
+            <div class="set-ttl">About Us Text</div>
+            <div class="fg"><label class="fl">Paragraph 1</label><textarea class="ft fi" id="sa1"></textarea></div>
+            <div class="fg"><label class="fl">Paragraph 2</label><textarea class="ft fi" id="sa2"></textarea></div>
+            <div class="fg"><label class="fl">Paragraph 3</label><textarea class="ft fi" id="sa3"></textarea></div>
+            <button class="btn bp bsm" onclick="saveAbout()">Save Content</button>
+          </div>
+          <div class="set-card">
+            <div class="set-ttl">Contact Information</div>
+            <div class="fg"><label class="fl">Address</label><input type="text" class="fi" id="si-addr"></div>
+            <div class="fg"><label class="fl">Phone</label><input type="text" class="fi" id="si-ph"></div>
+            <div class="fg"><label class="fl">Studio Email</label><input type="text" class="fi" id="si-em"></div>
+            <div class="fg"><label class="fl">Opening Hours</label><input type="text" class="fi" id="si-hr"></div>
+            <button class="btn bp bsm" onclick="saveContact()">Save</button>
+          </div>
+          <div class="set-card">
+            <div class="set-ttl">Google Maps Embed</div>
+            <div class="fg"><label class="fl">Embed URL</label><textarea class="ft fi" id="si-map" placeholder="https://maps.google.com/maps?q=...&output=embed"></textarea></div>
+            <button class="btn bp bsm" onclick="saveMap()">Save Map</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAYMENT -->
+      <div class="adm-panel" id="adm-payment">
+        <h2 class="adm-title">Payment (Midtrans)</h2>
+        <div class="set-grid">
+          <div class="set-card">
+            <div class="set-ttl">Midtrans Connection Status</div>
+            <div id="mt-status" style="font-size:14px;color:var(--mt);line-height:2.2">Loading...</div>
+          </div>
+          <div class="set-card">
+            <div class="set-ttl">How to Enable</div>
+            <p class="sm" style="line-height:1.8">
+              1. Sign up at <strong>dashboard.midtrans.com</strong><br>
+              2. Get your Server Key & Client Key<br>
+              3. Fill in the <code>.env</code> file on the server:<br>
+              <code style="background:var(--bg);padding:2px 6px;font-size:11px">MIDTRANS_SERVER_KEY=...</code><br>
+              <code style="background:var(--bg);padding:2px 6px;font-size:11px">MIDTRANS_CLIENT_KEY=...</code><br>
+              4. Restart the server
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECURITY -->
+      <div class="adm-panel" id="adm-security">
+        <h2 class="adm-title">Security</h2>
+        <div class="set-grid">
+          <div class="set-card" id="staff-pw-card">
+            <div class="set-ttl">Change My Password</div>
+            <p class="sm" style="margin-bottom:16px">Applies to your currently logged-in account, whether Administrator or Instructor.</p>
+            <div class="fg"><label class="fl">Current Password</label><input type="password" class="fi" id="staff-cur"></div>
+            <div class="fg"><label class="fl">New Password</label><input type="password" class="fi" id="staff-new" placeholder="At least 8 characters"></div>
+            <div class="fg"><label class="fl">Confirm New Password</label><input type="password" class="fi" id="staff-confirm"></div>
+            <button class="btn bp bsm" onclick="saveStaffPassword()">Save Password</button>
+          </div>
+          <div class="set-card" id="sys-status-card">
+            <div class="set-ttl">System Status</div>
+            <div id="sys-stat" class="body-t" style="font-size:14px;line-height:2.2">Loading...</div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- CLASS MODAL -->
+<div class="mo" id="cls-mo">
+  <div class="mbox">
+    <button class="mc" onclick="closeMo('cls-mo')">&#215;</button>
+    <h2 class="m-title" id="cls-mo-t" style="margin-bottom:20px">Add Class</h2>
+    <input type="hidden" id="cls-eid">
+    <div class="fg"><label class="fl">Class Name</label><input type="text" class="fi" id="cls-name"></div>
+    <div class="fr"><div class="fg"><label class="fl">Instructor</label><input type="text" class="fi" id="cls-inst"></div>
+    <div class="fg"><label class="fl">Level</label><select class="fs fi" id="cls-lv"><option>All Levels</option><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select></div></div>
+    <div class="fr"><div class="fg"><label class="fl">Duration</label><input type="text" class="fi" id="cls-dur" placeholder="60 minutes"></div>
+    <div class="fg"><label class="fl">Capacity</label><input type="number" class="fi" id="cls-cap" placeholder="12"></div></div>
+    <div class="fg"><label class="fl">Price (IDR)</label><input type="number" class="fi" id="cls-price" placeholder="85000"></div>
+    <button class="btn bp" style="width:100%" onclick="saveCls()">Save Class</button>
+  </div>
+</div>
+
+<!-- SCHEDULE MODAL -->
+<div class="mo" id="sch-mo">
+  <div class="mbox">
+    <button class="mc" onclick="closeMo('sch-mo')">&#215;</button>
+    <h2 class="m-title" id="sch-mo-t" style="margin-bottom:20px">Add Session</h2>
+    <input type="hidden" id="sch-eid">
+    <div class="fg">
+      <label class="fl">Session Date</label>
+      <input type="date" class="fi" id="sch-date-picker" onchange="syncSchDayFromDate()" required>
+      <p class="sm" id="sch-day-hint" style="margin-top:6px">Choose the exact calendar date. Sessions do not repeat automatically.</p>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Day</label><input type="text" class="fi" id="sch-day" readonly></div>
+      <div class="fg"><label class="fl">Time</label><input type="text" class="fi" id="sch-time" placeholder="07.00"></div>
+    </div>
+    <div class="fg"><label class="fl">Class</label><select class="fs fi" id="sch-cls"></select></div>
+    <div class="fg"><label class="fl">Spots Left</label><input type="number" class="fi" id="sch-slots" placeholder="12"></div>
+    <button class="btn bp" style="width:100%" onclick="saveSch()">Save Session</button>
+  </div>
+</div>
+
+<!-- MANUAL MEMBER MEMBERSHIP MODAL -->
+<div class="mo" id="manual-pkg-mo">
+  <div class="mbox">
+    <button class="mc" onclick="closeMo('manual-pkg-mo')">&#215;</button>
+    <h2 class="m-title" style="margin-bottom:20px">Add Member Membership</h2>
+    <p class="sm" style="margin:-8px 0 18px">For memberships sold directly at the studio. No Midtrans transaction is created.</p>
+    <div class="fg"><label class="fl">Member</label><select class="fs fi" id="mp-member"></select></div>
+    <div class="fg"><label class="fl">Membership Package</label><select class="fs fi" id="mp-package" onchange="prefillManualPackage()"></select></div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Start Date</label><input type="date" class="fi" id="mp-start"></div>
+      <div class="fg"><label class="fl">Payment Method</label><select class="fs fi" id="mp-payment"><option value="manual">Manual</option><option value="cash">Cash</option><option value="bank_transfer">Bank Transfer</option><option value="qris_offline">QRIS / Offline</option></select></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Price Paid (IDR)</label><input type="number" class="fi" id="mp-price" min="0"></div>
+      <div class="fg"><label class="fl">Credits</label><input type="number" class="fi" id="mp-credits" min="1"></div>
+    </div>
+    <div class="fr">
+       <div class="fg"><label class="fl">Validity (days)</label><input type="number" class="fi" id="mp-validity" min="1"></div>
+       <div class="fg"><label class="fl">Credits Already Used</label><input type="number" class="fi" id="mp-used" min="0" value="0"></div>
+     </div>
+    <p class="sm" id="mp-hint" style="margin:4px 0 16px"></p>
+    <button class="btn bp" style="width:100%" onclick="saveManualPkg()">Activate Membership</button>
+  </div>
+</div>
+
+<!-- MEMBERSHIP PACKAGE MODAL -->
+<div class="mo" id="msh-mo">
+  <div class="mbox">
+    <button class="mc" onclick="closeMo('msh-mo')">&#215;</button>
+    <h2 class="m-title" id="msh-mo-t" style="margin-bottom:20px">Add Package</h2>
+    <input type="hidden" id="msh-eid">
+    <div class="fg"><label class="fl">Package Name</label><input type="text" class="fi" id="msh-name" placeholder="Monthly Pass"></div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Price (IDR)</label><input type="number" class="fi" id="msh-price" placeholder="680000"></div>
+      <div class="fg"><label class="fl">Duration (display text)</label><input type="text" class="fi" id="msh-duration" placeholder="5 classes · valid for 1 month"></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Class Credits</label><input type="number" class="fi" id="msh-credits" placeholder="5"></div>
+      <div class="fg"><label class="fl">Validity (days)</label><input type="number" class="fi" id="msh-validity" placeholder="30"></div>
+    </div>
+    <p class="sm" style="margin:-12px 0 16px">Credits and validity are what the system actually enforces. The duration text above is just for display on the Membership page.</p>
+    <div class="fg"><label class="fl">Features (one per line)</label>
+      <textarea class="ft fi" id="msh-feats" placeholder="Unlimited classes&#10;Priority booking&#10;Private locker" rows="5"></textarea></div>
+    <button class="btn bp" style="width:100%" onclick="saveMsh()">Save Package</button>
+  </div>
+</div>
+
+<!-- STAFF MODAL -->
+<div class="mo" id="staff-mo">
+  <div class="mbox">
+    <button class="mc" onclick="closeMo('staff-mo')">&#215;</button>
+    <h2 class="m-title" id="staff-mo-t" style="margin-bottom:20px">Add Staff Account</h2>
+    <input type="hidden" id="staff-eid">
+    <div class="fr">
+      <div class="fg"><label class="fl">Full Name</label><input type="text" class="fi" id="staff-name" placeholder="Sari Dewi"></div>
+      <div class="fg"><label class="fl">Role</label>
+        <select class="fs fi" id="staff-role">
+          <option value="instructor">Instructor</option>
+          <option value="admin">Administrator</option>
+        </select>
+      </div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Username</label><input type="text" class="fi" id="staff-username" placeholder="saridewi"></div>
+      <div class="fg"><label class="fl">Email (optional)</label><input type="email" class="fi" id="staff-email" placeholder="sari@avaiastudio.com"></div>
+    </div>
+    <div class="fg"><label class="fl">Password</label><input type="password" class="fi" id="staff-pass" placeholder="At least 8 characters"></div>
+    <p class="sm" id="staff-pass-hint" style="margin:-12px 0 16px">Password for the first login.</p>
+    <div class="fg"><label class="fl">Specialty (for instructors)</label><input type="text" class="fi" id="staff-specialty" placeholder="Hatha, Vinyasa, Meditation"></div>
+    <div class="fg"><label class="fl">Short Bio (optional)</label><textarea class="ft fi" id="staff-bio" rows="3" placeholder="Instructor's experience and certifications"></textarea></div>
+    <button class="btn bp" style="width:100%" onclick="saveStaff()">Save Staff Account</button>
+  </div>
+</div>
+
+<div id="_toast" class="toast"></div>
+<script src="/js/admin.js?v=20260821manualfix1"></script>
+</body>
+</html>
