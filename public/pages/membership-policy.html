@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Membership Policy — Avaia Studio</title>
+  <link rel="stylesheet" href="/css/global.css">
+  <script>window.PAGE_ID='membership-policy'; window.PAGE_TITLE='Membership Policy';</script>
+</head>
+<body>
+<nav class="navbar" id="main-nav"></nav>
+<div class="nav-overlay" id="nav-overlay" onclick="closeDrawer()"></div>
+<div class="nav-drawer">
+  <div class="drawer-head"><img src="/img/logo-dark.svg" class="brand-icon" alt="Avaia Studio"></div>
+  <div class="drawer-nav"></div>
+  <div class="drawer-foot"></div>
+</div>
+
+<div style="padding-top:var(--nav)">
+  <div class="page-top">
+    <div class="page-top-in"><p class="eye">Policy</p><h1 class="h2">Membership Policy</h1></div>
+  </div>
+
+  <div class="pol-wrap">
+    <p class="pol-updated">Last updated: <span id="pol-date"></span></p>
+
+    <div class="pol-sec">
+      <h2>1. Types of Membership</h2>
+      <p>Avaia Studio offers several types of membership, including a single-class package, a first-timer package, and monthly packages. Full pricing and details for each package can be found on the <a href="/pricing" style="color:var(--p);font-weight:600">Membership</a> page.</p>
+    </div>
+
+    <div class="pol-sec">
+      <h2>2. Membership Terms</h2>
+      <ol>
+        <li>Membership is activated on the date of purchase.</li>
+        <li>Packages are valid according to the stated validity period.</li>
+        <li>Membership is valid for all regular classes unless otherwise stated.</li>
+        <li>Membership cannot be paused.</li>
+        <li>Expired packages cannot be reinstated.</li>
+        <li>All purchases are final and non-refundable.</li>
+      </ol>
+    </div>
+
+    <div class="pol-sec">
+      <h2>3. Renewal & Payment</h2>
+      <ul>
+        <li>Membership renewal is done manually by the member through the dashboard or directly at the studio.</li>
+        <li>Payment is made in advance through the methods available in the system (Qris, e-wallet, bank transfer via official payment gateway).</li>
+        <li>Any price changes will be communicated at least 14 days before taking effect, and will not affect members who are still within an active package period.</li>
+      </ul>
+    </div>
+
+    <div class="pol-sec">
+      <h2>4. Transfer</h2>
+      <p>Membership is personal and cannot be transferred to another person.</p>
+      <div class="pol-note">For questions about your membership status or remaining sessions, please contact us via our <a href="/feedback" style="color:var(--p);font-weight:600">Feedback</a> page. See also our <a href="/booking-policy" style="color:var(--p);font-weight:600">Booking Policy</a> and <a href="/cancel-policy" style="color:var(--p);font-weight:600">Cancellation Policy</a>.</div>
+    </div>
+
+    <div class="pol-sec">
+      <h2>5. Policy Changes</h2>
+      <p>Avaia Studio reserves the right to update this membership policy at any time for operational adjustments. The latest version will always be available on this page.</p>
+    </div>
+  </div>
+</div>
+
+<footer id="main-footer"></footer>
+<script src="/js/i18n.js?v=20260829forgotpw1"></script>
+<script src="/js/core.js?v=20260829forgotpw1"></script>
+<script>
+function pageInit(){
+  document.getElementById('pol-date').textContent = new Date().toLocaleDateString('en-US',{day:'numeric',month:'long',year:'numeric'});
+}
+</script>
+</body>
+</html>

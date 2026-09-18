@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+
+# Environment variables — JANGAN PERNAH commit file ini
+.env
+.env.local
+.env.production
+
+# Database lokal — berisi data member, booking, password hash
+db.json
+
+# Uploads (foto admin) — opsional, biasanya tidak perlu di-commit
+# Uncomment baris di bawah jika tidak ingin foto ikut ke git
+# public/uploads/*
+# !public/uploads/.gitkeep
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Local database is forbidden in production
