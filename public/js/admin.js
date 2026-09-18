@@ -1012,7 +1012,7 @@ async function loadEmailStatus(){
     const r=await fetch('/api/status');const d=await r.json();
     const el=document.getElementById('email-status');
     if(el) el.innerHTML=d.email
-      ?`<div>Status: <strong style="color:var(--ok)">✓ Active</strong></div><div>Account: <strong>${d.emailUser}</strong></div><div style="font-size:12px;margin-top:8px">Booking confirmation, reminder, and cancellation notification emails are active.</div>`
+      ?`<div>Status: <strong style="color:var(--ok)">✓ Active</strong></div><div style="font-size:12px;margin-top:8px">Booking confirmation, reminder, and cancellation notification emails are active.</div>`
       :`<div>Status: <strong style="color:var(--a)">✗ Not configured</strong></div><div style="font-size:12px;margin-top:8px">Fill in EMAIL_HOST, EMAIL_USER, and EMAIL_PASS in .env to enable automatic email notifications.</div>`;
   }catch(e){}
 }

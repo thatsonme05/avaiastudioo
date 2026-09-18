@@ -96,27 +96,45 @@ function notifyAdminEmail(title, rows, link){
     .catch(e => console.error('Admin alert email error:', e.message));
 }
 
+function escapeHtml(value){
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+  }[ch]));
+}
+
 function emailBookingConfirm(booking, studioName='Avaia Studio') {
+  // Guest-controlled fields must never be interpolated into an HTML email
+  // verbatim. This keeps a booking note/name from becoming email markup.
+  const safeStudioName=escapeHtml(studioName);
+  const safeBooking={
+    ...booking,
+    name:escapeHtml(booking.name),
+    class:escapeHtml(booking.class),
+    date:escapeHtml(booking.date),
+    time:escapeHtml(booking.time),
+    note:escapeHtml(booking.note),
+    id:escapeHtml(booking.id),
+  };
   const subject = `Booking Confirmation — ${booking.class} | ${studioName}`;
   const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
 <style>body{font-family:Georgia,serif;background:#fdf8f6;margin:0;padding:20px}.wrap{max-width:560px;margin:0 auto;background:#fff;border:1px solid #ddd5ca}.hdr{background:#5D3A24;padding:32px 36px}.hdr h1{color:#fff;font-size:22px;margin:0;font-weight:400}.hdr p{color:rgba(255,255,255,.6);margin:4px 0 0;font-size:13px}.bdy{padding:36px}.ok{display:inline-block;background:#e6f0e6;color:#4a7a48;padding:8px 16px;font-size:13px;margin-bottom:20px}.box{background:#fdf8f6;border:1px solid #ddd5ca;padding:20px;margin:16px 0}.row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #ede5dc}.row:last-child{border-bottom:none}.dl{font-size:11px;color:#7a6e68;text-transform:uppercase;letter-spacing:.08em}.dv{font-size:14px;font-weight:600;color:#1c1410}.note{font-size:13px;color:#7a6e68;line-height:1.7;margin-top:16px}.ftr{padding:18px 36px;border-top:1px solid #ede5dc;font-size:12px;color:#7a6e68}</style>
 </head><body><div class="wrap">
-<div class="hdr"><h1>${studioName}</h1><p>Class Booking Confirmation</p></div>
+<div class="hdr"><h1>${safeStudioName}</h1><p>Class Booking Confirmation</p></div>
 <div class="bdy">
 <div class="ok">✓ Payment Confirmed</div>
-<p style="font-size:15px;color:#1c1410">Hi, <strong>${booking.name}</strong>!</p>
+<p style="font-size:15px;color:#1c1410">Hi, <strong>${safeBooking.name}</strong>!</p>
 <p style="font-size:14px;color:#7a6e68;line-height:1.7">Your booking has been confirmed. See you at the studio!</p>
 <div class="box">
-<div class="row"><span class="dl">Class</span><span class="dv">${booking.class}</span></div>
-<div class="row"><span class="dl">Date</span><span class="dv">${booking.date}</span></div>
-<div class="row"><span class="dl">Time</span><span class="dv">${booking.time}</span></div>
+<div class="row"><span class="dl">Class</span><span class="dv">${safeBooking.class}</span></div>
+<div class="row"><span class="dl">Date</span><span class="dv">${safeBooking.date}</span></div>
+<div class="row"><span class="dl">Time</span><span class="dv">${safeBooking.time}</span></div>
 <div class="row"><span class="dl">Total Paid</span><span class="dv">IDR ${Number(booking.amount||0).toLocaleString('en-US')}</span></div>
-<div class="row"><span class="dl">Order ID</span><span class="dv" style="font-size:11px;font-weight:400">${booking.id}</span></div>
+<div class="row"><span class="dl">Order ID</span><span class="dv" style="font-size:11px;font-weight:400">${safeBooking.id}</span></div>
 </div>
-${booking.note?`<p class="note"><strong>Note:</strong> ${booking.note}</p>`:''}
+${safeBooking.note?`<p class="note"><strong>Note:</strong> ${safeBooking.note}</p>`:''}
 <p class="note">Please arrive <strong>10 minutes early</strong>. Cancellations must be made at least 2 hours before class.</p>
 </div>
-<div class="ftr">This is an automated email from ${studioName}. Please do not reply.</div>
+<div class="ftr">This is an automated email from ${safeStudioName}. Please do not reply.</div>
 </div></body></html>`;
   const text = `Booking Confirmation — ${studioName}\n\nHi ${booking.name},\n\nClass: ${booking.class}\nDate: ${booking.date}\nTime: ${booking.time}\nTotal: IDR ${Number(booking.amount||0).toLocaleString('en-US')}\nOrder ID: ${booking.id}\n\nPlease arrive 10 minutes early.`;
   return { subject, html, text };
@@ -301,6 +319,29 @@ const generalLimiter = rateLimit({
   message: { error: 'Too many requests. Please try again shortly.' },
 });
 
+// Guest checkout is intentionally public, but it must not become an easy
+// way to flood the reservation table or repeatedly make the server call the
+// payment provider. These limits are per source IP and sit in addition to
+// the general API limit. A legitimate guest can still retry several times
+// while a runaway script is stopped quickly.
+const paymentCreateLimiter = rateLimit({
+  windowMs: 10*60*1000,
+  max: 15,
+  keyGenerator: req => ipKeyGenerator(req.ip),
+  message: { error: 'Too many booking attempts. Please wait a few minutes and try again.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const paymentStatusLimiter = rateLimit({
+  windowMs: 1*60*1000,
+  max: 60,
+  keyGenerator: req => ipKeyGenerator(req.ip),
+  message: { error: 'Too many payment status checks. Please try again shortly.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 app.use('/api/', generalLimiter);
 
 function requireRole(allowedRoles) {
@@ -387,7 +428,10 @@ function getSoftMemberAuth(req){
 app.get('/api/status',(req,res)=>res.json({
   supabase:USE_SB, midtrans:USE_MT,
   midtransEnv:MT_ENV, midtransClientKey:MT_CLIENT||null,
-  email:USE_EMAIL, emailUser:USE_EMAIL?EMAIL_USER:null
+  // This endpoint is public because the booking pages need the Midtrans
+  // client key. Do not expose EMAIL_USER (or any other server credential /
+  // account identifier) in a public health response.
+  email:USE_EMAIL
 }));
 const APP_BUILD_ID = 'member-login-deterministic-20260824-01';
 const APP_STARTED_AT = new Date().toISOString();
@@ -1609,31 +1653,45 @@ async function redeemPackageCreditAtomic(memberPackageId){
   return data===true || data==='true';
 }
 
-app.post('/api/payment/create',async(req,res)=>{
-  const{bookingData:rawBookingData,className}=req.body||{};
+app.post('/api/payment/create',paymentCreateLimiter,async(req,res)=>{
+  const{bookingData:rawBookingData}=req.body||{};
   if(!rawBookingData || typeof rawBookingData!=='object' || Array.isArray(rawBookingData))
     return res.status(400).json({error:'Incomplete booking data.'});
-  const bookingData={...rawBookingData};
+  // Only copy fields that a guest is allowed to submit. In particular, do
+  // not accept client-supplied member_id, status, amount, slot flags, or
+  // payment fields: those are server/database-owned values.
+  const bookingData={
+    name:String(rawBookingData.name||'').trim(),
+    class:String(rawBookingData.class||'').trim(),
+    phone:String(rawBookingData.phone||'').trim(),
+    email:String(rawBookingData.email||'').trim().toLowerCase(),
+    note:String(rawBookingData.note||'').trim(),
+    schedule_id:String(rawBookingData.schedule_id||'').trim(),
+  };
   // Normalize a guest-typed email the same way member accounts always are
   // (trim + lowercase), so a booking made before signing up still matches
   // that same person's account later — see emailsMatch() for the read-side
   // half of this fix, which also covers bookings already stored un-normalized.
-  if(bookingData.email) bookingData.email=String(bookingData.email).trim().toLowerCase();
   if(!String(bookingData.name||'').trim() || !bookingData.email || !String(bookingData.phone||'').trim())
     return res.status(400).json({error:'Name, email and WhatsApp number are required.'});
+  if(bookingData.name.length>120 || bookingData.email.length>254 || bookingData.phone.length>40 || bookingData.note.length>500)
+    return res.status(400).json({error:'One or more booking fields are too long.'});
 
   let amount;
   if(USE_SB){
     if(!bookingData.schedule_id) return res.status(400).json({error:'Schedule session is required.'});
     const { data: scheduleRow, error: scheduleErr } = await supabase
       .from('schedule')
-      .select('id,session_date,time,slots,classes(price)')
+      .select('id,session_date,time,slots,classes(name,price)')
       .eq('id', bookingData.schedule_id)
       .maybeSingle();
 
     if(scheduleErr) return res.status(500).json({error:'Unable to verify the selected schedule.'});
     if(!scheduleRow) return res.status(404).json({error:'This schedule session no longer exists.'});
     if(!scheduleRow.session_date) return res.status(409).json({error:'This schedule session has no exact date yet. Please choose another session.'});
+    const verifiedClassName=String(scheduleRow.classes?.name||'').trim();
+    if(!verifiedClassName) return res.status(409).json({error:'This schedule session has no valid class configured. Please choose another session.'});
+    bookingData.class=verifiedClassName;
 
     // SECURITY / INTEGRITY: never trust the price sent by the browser.
     // Always charge the price configured for the class in the database,
@@ -1732,7 +1790,7 @@ app.post('/api/payment/create',async(req,res)=>{
   try{
     const param={
       transaction_details:{order_id:orderId,gross_amount:amount},
-      item_details:[{id:bookingData.schedule_id||'class',price:amount,quantity:1,name:className||bookingData.class}],
+      item_details:[{id:bookingData.schedule_id||'class',price:amount,quantity:1,name:bookingData.class}],
       customer_details:{
         first_name:bookingData.name.split(' ')[0],
         last_name:bookingData.name.split(' ').slice(1).join(' '),
@@ -1843,50 +1901,83 @@ async function expireUnpaidPendingIfAged(orderId,isPackage,createdAt,result){
   return {confirmed:false,cancelled:true,expiredByAge:true,record};
 }
 
-app.get('/api/payment/status/:orderId',async(req,res)=>{
+function publicBookingPayment(row){
+  if(!row) return null;
+  return {
+    status:row.status,
+    class:row.class,
+    date:row.date,
+    time:row.time,
+    amount:row.amount,
+    payment_type:row.payment_type,
+    paid_at:row.paid_at,
+    created_at:row.created_at,
+  };
+}
+
+function publicPackagePayment(row){
+  if(!row) return null;
+  return {
+    status:row.status,
+    package_name:row.package_name,
+    credits_total:row.credits_total,
+    expires_at:row.expires_at,
+    created_at:row.created_at,
+  };
+}
+
+app.get('/api/payment/status/:orderId',paymentStatusLimiter,async(req,res)=>{
   if(!USE_SB) return res.status(503).json({error:'Supabase is required.'});
   const orderId=req.params.orderId;
   const isPackage=orderId.startsWith('AVAIA-PKG-');
 
   if(isPackage){
-    const {data:pkg,error:pkgErr}=await supabase.from('member_packages').select('*').eq('payment_order_id',orderId).maybeSingle();
+    const {data:pkg,error:pkgErr}=await supabase.from('member_packages')
+      .select('status,package_name,credits_total,expires_at')
+      .eq('payment_order_id',orderId).maybeSingle();
     if(pkgErr) return res.status(500).json({error:'Unable to check membership payment: '+pkgErr.message});
-    if(pkg) return res.json({status:'active',package:pkg});
+    if(pkg) return res.json({status:pkg.status||'active',package:publicPackagePayment(pkg)});
 
-    const {data:pendingPkg,error:pendingErr}=await supabase.from('pending_package_purchases').select('*').eq('id',orderId).maybeSingle();
+    const {data:pendingPkg,error:pendingErr}=await supabase.from('pending_package_purchases')
+      .select('status,package_name,credits_total,expires_at,created_at')
+      .eq('id',orderId).maybeSingle();
     if(pendingErr) return res.status(500).json({error:'Unable to check membership payment: '+pendingErr.message});
     if(!pendingPkg) return res.status(404).json({error:'Membership payment not found'});
 
     if(!String(pendingPkg.status||'').startsWith('cancelled_')){
       try{
         const result=await expireUnpaidPendingIfAged(orderId,true,pendingPkg.created_at,await activelyConfirmWithMidtrans(orderId, true));
-        if(result?.confirmed) return res.json({status:'active',package:result.record});
-        if(result?.cancelled) return res.json({status:result.record?.status||'cancelled',package:result.record||pendingPkg});
+        if(result?.confirmed) return res.json({status:'active',package:publicPackagePayment(result.record)});
+        if(result?.cancelled) return res.json({status:result.record?.status||'cancelled',package:publicPackagePayment(result.record||pendingPkg)});
       }catch(e){
         console.error('Active confirm (package) failed for', orderId, ':', e.message);
       }
     }
-    return res.json({status:pendingPkg.status,package:pendingPkg});
+    return res.json({status:pendingPkg.status,package:publicPackagePayment(pendingPkg)});
   }
 
-  let {data:b,error:bErr}=await supabase.from('bookings').select('*').eq('id',orderId).maybeSingle();
+  let {data:b,error:bErr}=await supabase.from('bookings')
+    .select('status,class,date,time,amount,payment_type,paid_at,created_at')
+    .eq('id',orderId).maybeSingle();
   if(bErr) return res.status(500).json({error:'Unable to check booking payment: '+bErr.message});
-  if(b) return res.json({status:b.status,booking:b});
+  if(b) return res.json({status:b.status,booking:publicBookingPayment(b)});
 
-  const {data:pendingBooking,error:pbErr}=await supabase.from('pending_bookings').select('*').eq('id',orderId).maybeSingle();
+  const {data:pendingBooking,error:pbErr}=await supabase.from('pending_bookings')
+    .select('status,class,date,time,amount,payment_type,paid_at,created_at')
+    .eq('id',orderId).maybeSingle();
   if(pbErr) return res.status(500).json({error:'Unable to check booking payment: '+pbErr.message});
   if(!pendingBooking) return res.status(404).json({error:'Booking payment not found'});
 
   if(!String(pendingBooking.status||'').startsWith('cancelled_')){
     try{
       const result=await expireUnpaidPendingIfAged(orderId,false,pendingBooking.created_at,await activelyConfirmWithMidtrans(orderId, false));
-      if(result?.confirmed) return res.json({status:result.record.status,booking:result.record});
-      if(result?.cancelled) return res.json({status:result.record?.status||'cancelled',booking:result.record||pendingBooking});
+      if(result?.confirmed) return res.json({status:result.record.status,booking:publicBookingPayment(result.record)});
+      if(result?.cancelled) return res.json({status:result.record?.status||'cancelled',booking:publicBookingPayment(result.record||pendingBooking)});
     }catch(e){
       console.error('Active confirm (booking) failed for', orderId, ':', e.message);
     }
   }
-  res.json({status:pendingBooking.status,booking:pendingBooking});
+  res.json({status:pendingBooking.status,booking:publicBookingPayment(pendingBooking)});
 });
 
 // Sweeps every still-pending payment (bookings + membership packages) and

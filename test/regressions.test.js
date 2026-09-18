@@ -30,6 +30,10 @@ test('all server and browser JavaScript assets parse', () => {
 test('guest booking price is verified from the database, not the browser amount', () => {
   const server = read('server.js');
   assert.equal(server.includes("if(!bookingData||!amount)"), false);
+  assert.match(server, /const bookingData=\{\s*name:String\(rawBookingData\.name/);
+  assert.doesNotMatch(server, /const bookingData=\{\.\.\.rawBookingData\}/);
+  assert.match(server, /select\('id,session_date,time,slots,classes\(name,price\)'\)/);
+  assert.match(server, /bookingData\.class=verifiedClassName/);
   assert.match(server, /const verifiedPrice = parsePositiveInteger\(scheduleRow\.classes\?\.price\);/);
   assert.match(server, /amount = verifiedPrice;/);
   assert.ok(server.indexOf('amount = verifiedPrice;') < server.indexOf('transaction_details:{order_id:orderId,gross_amount:amount}'));
@@ -92,6 +96,23 @@ test('payment simulation and fake webhooks are disabled unless explicitly enable
   assert.match(server, /Payment notifications are disabled/);
   assert.match(server, /JWT_SECRET must be set in production/);
   assert.match(server, /ALLOWED_ORIGIN must be restricted in production/);
+});
+
+test('public guest payment endpoints are rate-limited and do not expose server identity or PII', () => {
+  const server = read('server.js');
+  const statusRoute = server.slice(
+    server.indexOf("app.get('/api/payment/status/:orderId'"),
+    server.indexOf('// Sweeps every still-pending payment'),
+  );
+  assert.match(server, /const paymentCreateLimiter = rateLimit\(/);
+  assert.match(server, /app\.post\('\/api\/payment\/create',paymentCreateLimiter/);
+  assert.match(server, /const paymentStatusLimiter = rateLimit\(/);
+  assert.match(server, /app\.get\('\/api\/payment\/status\/:orderId',paymentStatusLimiter/);
+  assert.match(server, /publicBookingPayment\(row\)/);
+  assert.match(server, /publicPackagePayment\(row\)/);
+  assert.match(server, /function escapeHtml\(value\)/);
+  assert.doesNotMatch(server, /emailUser:USE_EMAIL\?EMAIL_USER/);
+  assert.doesNotMatch(statusRoute, /select\('\*'\)/);
 });
 
 test('booking imports cannot create zero or null price non-package rows', () => {
