@@ -58,7 +58,7 @@ who can manage the schedule and classes.
 ### Booking & Payment System
 - User picks a class → fills in the form → **pays via Midtrans** (QRIS, GoPay, OVO, bank transfer, credit card, Indomaret)
 - Booking is **automatically confirmed** after successful payment (via webhook)
-- If Midtrans isn't configured → **simulation mode** is active (booking is confirmed instantly, for testing)
+- For local testing only, simulation mode can be explicitly enabled with `ALLOW_PAYMENT_SIMULATION=true`; it is never enabled automatically in production
 - Slots automatically decrease with every successful booking
 
 ### Admin Panel (`/admin`)
@@ -107,7 +107,7 @@ cp .env.example .env
    ```
 4. Restart the server: `node server.js`
 
-> Without Midtrans configured, booking still works in **simulation mode** — automatically confirmed without real payment. Good for testing.
+> In production, Midtrans must be configured. For local testing only, set `ALLOW_PAYMENT_SIMULATION=true` with `NODE_ENV` other than `production`; otherwise payment creation is blocked and no booking is confirmed without a verified payment.
 
 ---
 

@@ -84,3 +84,32 @@ test('membership packages cannot reintroduce zero-price purchases', () => {
   assert.match(admin, /Package name, price, credits and validity must all be valid positive values/);
   assert.match(pricing, /const validPrice = Number\.isFinite\(Number\(p\.price\)\)/);
 });
+
+test('payment simulation and fake webhooks are disabled unless explicitly enabled for local demos', () => {
+  const server = read('server.js');
+  assert.match(server, /ALLOW_PAYMENT_SIMULATION/);
+  assert.match(server, /Payment simulation is disabled/);
+  assert.match(server, /Payment notifications are disabled/);
+  assert.match(server, /JWT_SECRET must be set in production/);
+  assert.match(server, /ALLOWED_ORIGIN must be restricted in production/);
+});
+
+test('booking imports cannot create zero or null price non-package rows', () => {
+  const server = read('server.js');
+  assert.match(server, /parseMoneyInteger/);
+  assert.match(server, /A positive Amount\/Price is required for non-package bookings/);
+  assert.match(server, /skipped\.push/);
+});
+
+test('database integrity migration blocks duplicate checkouts and invalid money', () => {
+  const migration = read('migrations/017_integrity_hardening.sql');
+  assert.match(migration, /pending_bookings_identity_schedule_uidx/);
+  assert.match(migration, /pending_package_request_fingerprint_uidx/);
+  assert.match(migration, /bookings_identity_schedule_uidx/);
+  assert.match(migration, /bookings_amount_integrity_chk/);
+  assert.match(migration, /classes_name_normalized_uidx/);
+  assert.match(migration, /not like 'cancelled%'/i);
+  assert.doesNotMatch(migration, /not like 'cancelled_%'/i);
+  assert.match(migration, /revoke execute on function public\.rls_auto_enable/i);
+  assert.match(migration, /drop policy if exists "Bookings insert"/i);
+});

@@ -196,6 +196,11 @@ const MT_SERVER = process.env.MIDTRANS_SERVER_KEY || '';
 const MT_CLIENT = process.env.MIDTRANS_CLIENT_KEY || '';
 const MT_ENV    = process.env.MIDTRANS_ENV || 'sandbox';
 let snap = null, core = null, USE_MT = false;
+// Payment simulation is useful for a local demo, but it must never be an
+// unauthenticated production endpoint that can turn any pending order into a
+// confirmed booking. Enable it explicitly only in a non-production environment.
+const ALLOW_PAYMENT_SIMULATION = String(process.env.ALLOW_PAYMENT_SIMULATION || '').toLowerCase() === 'true'
+  && process.env.NODE_ENV !== 'production';
 
 if (MT_SERVER && !MT_SERVER.includes('xxxx')) {
   try {
@@ -247,6 +252,11 @@ function parsePositiveInteger(value){
 function parseNonNegativeInteger(value){
   const n=typeof value==='number' ? value : Number(String(value ?? '').trim());
   return Number.isSafeInteger(n) && n>=0 ? n : null;
+}
+function parseMoneyInteger(value){
+  if(typeof value==='number') return parsePositiveInteger(value);
+  const digits=String(value ?? '').replace(/[^0-9]/g,'');
+  return parsePositiveInteger(digits);
 }
 
 function authIdentityKey(req) {
@@ -1103,22 +1113,58 @@ app.get('/api/classes',async(req,res)=>{
 });
 app.post('/api/classes',requireStaff,async(req,res)=>{
   const body={...req.body};
+  body.name=String(body.name||'').trim();
+  if(!body.name) return res.status(400).json({error:'Class name is required.'});
   const price=parsePositiveInteger(body.price);
   if(!price) return res.status(400).json({error:'A valid class price greater than 0 is required.'});
   body.price=price;
-  if(USE_SB){const{data,error}=await supabase.from('classes').insert(body).select().single();
-    if(error) return res.status(500).json({error:error.message}); return res.json(data);}
+  if(Object.prototype.hasOwnProperty.call(body,'capacity')){
+    const capacity=parsePositiveInteger(body.capacity);
+    if(!capacity) return res.status(400).json({error:'A valid class capacity greater than 0 is required.'});
+    body.capacity=capacity;
+  }
+  if(USE_SB){
+    const{data:duplicate,error:duplicateErr}=await supabase.from('classes').select('id').ilike('name',body.name).limit(1);
+    if(duplicateErr) return res.status(500).json({error:duplicateErr.message});
+    if(duplicate?.length) return res.status(409).json({error:'A class with this name already exists.'});
+    const{data,error}=await supabase.from('classes').insert(body).select().single();
+    if(error){
+      if(error.code==='23505') return res.status(409).json({error:'A class with this name already exists.'});
+      return res.status(500).json({error:error.message});
+    }
+    return res.json(data);
+  }
   const db=unreachableLocalStoreRead(); const c={id:'c'+uuidv4().slice(0,8),...body}; db.classes.push(c); unreachableLocalStoreWrite(db); res.json(c);
 });
 app.put('/api/classes/:id',requireStaff,async(req,res)=>{
   const body={...req.body};
+  if(Object.prototype.hasOwnProperty.call(body,'name')){
+    body.name=String(body.name||'').trim();
+    if(!body.name) return res.status(400).json({error:'Class name is required.'});
+  }
   if(Object.prototype.hasOwnProperty.call(body,'price')){
     const price=parsePositiveInteger(body.price);
     if(!price) return res.status(400).json({error:'A valid class price greater than 0 is required.'});
     body.price=price;
   }
-  if(USE_SB){const{data,error}=await supabase.from('classes').update(body).eq('id',req.params.id).select().single();
-    if(error) return res.status(500).json({error:error.message}); return res.json(data);}
+  if(Object.prototype.hasOwnProperty.call(body,'capacity')){
+    const capacity=parsePositiveInteger(body.capacity);
+    if(!capacity) return res.status(400).json({error:'A valid class capacity greater than 0 is required.'});
+    body.capacity=capacity;
+  }
+  if(USE_SB){
+    if(body.name){
+      const{data:duplicate,error:duplicateErr}=await supabase.from('classes').select('id').ilike('name',body.name).neq('id',req.params.id).limit(1);
+      if(duplicateErr) return res.status(500).json({error:duplicateErr.message});
+      if(duplicate?.length) return res.status(409).json({error:'A class with this name already exists.'});
+    }
+    const{data,error}=await supabase.from('classes').update(body).eq('id',req.params.id).select().single();
+    if(error){
+      if(error.code==='23505') return res.status(409).json({error:'A class with this name already exists.'});
+      return res.status(500).json({error:error.message});
+    }
+    return res.json(data);
+  }
   const db=unreachableLocalStoreRead(); const i=db.classes.findIndex(c=>c.id===req.params.id);
   if(i<0) return res.status(404).json({error:'Not found'});
   db.classes[i]={...db.classes[i],...body}; unreachableLocalStoreWrite(db); res.json(db.classes[i]);
@@ -1310,7 +1356,11 @@ app.post('/api/bookings/import',requireAdmin,uploadXLSX.single('file'),async(req
     const rows=XLSX.utils.sheet_to_json(ws);
     fs.unlinkSync(req.file.path);
     let imported=0;
-    for(const row of rows){
+    const skipped=[];
+    for(const [rowIndex,row] of rows.entries()){
+      const paymentType=String(row['Payment']||row['Payment Type']||row['Pembayaran']||row['payment_type']||'import').trim().toLowerCase().replace(/\s+/g,'_');
+      const rawAmount=row['Amount']??row['Price']??row['Harga']??row['amount']??row['price'];
+      const amount=paymentType==='package_credit'?0:parseMoneyInteger(rawAmount);
       const b={
         id:'b'+uuidv4().slice(0,8),
         name:row['Name']||row['Nama']||row['name']||'',
@@ -1320,15 +1370,27 @@ app.post('/api/bookings/import',requireAdmin,uploadXLSX.single('file'),async(req
         date:row['Date']||row['Tanggal']||row['date']||'',
         time:row['Time']||row['Waktu']||row['time']||'',
         note:row['Note']||row['Catatan']||row['note']||'',
-        status:'confirmed',payment_type:'import',
+        amount,payment_type:paymentType,
+        schedule_id:row['Schedule ID']||row['schedule_id']||null,
         created_at:new Date().toISOString()
       };
       if(!b.name||!b.email) continue;
-      if(USE_SB) await supabase.from('bookings').insert(b);
-      else{ const db=unreachableLocalStoreRead(); db.bookings.unshift(b); unreachableLocalStoreWrite(db); }
+      if(paymentType!=='package_credit' && !amount){
+        skipped.push({row:rowIndex+2,reason:'A positive Amount/Price is required for non-package bookings.'});
+        continue;
+      }
+      if(USE_SB){
+        const{error:insertErr}=await supabase.from('bookings').insert(b);
+        if(insertErr){
+          skipped.push({row:rowIndex+2,reason:insertErr.message});
+          continue;
+        }
+      } else {
+        const db=unreachableLocalStoreRead(); db.bookings.unshift(b); unreachableLocalStoreWrite(db);
+      }
       imported++;
     }
-    res.json({ok:true,imported});
+    res.json({ok:true,imported,skipped});
   }catch(e){res.status(500).json({error:e.message});}
 });
 
@@ -1641,6 +1703,8 @@ app.post('/api/payment/create',async(req,res)=>{
     const {error:pendingErr}=await supabase.from('pending_bookings').insert(pending);
     if(pendingErr){
       await releaseScheduleSlot(bookingData.schedule_id);
+      if(pendingErr.code==='23505')
+        return res.status(409).json({error:'This attendee already has a booking or pending payment for this class session.'});
       return res.status(500).json({error:'Unable to create the payment transaction. Please try again.'});
     }
   } else {
@@ -1657,7 +1721,13 @@ app.post('/api/payment/create',async(req,res)=>{
     }
   }
 
-  if(!USE_MT) return res.json({ok:true,orderId,token:null,simulated:true});
+  if(!USE_MT){
+    if(!ALLOW_PAYMENT_SIMULATION){
+      await cancelBooking(orderId,'payment_unconfigured');
+      return res.status(503).json({error:'Payment gateway is not configured.'});
+    }
+    return res.json({ok:true,orderId,token:null,simulated:true});
+  }
 
   try{
     const param={
@@ -1684,11 +1754,10 @@ app.post('/api/payment/create',async(req,res)=>{
 });
 
 app.post('/api/payment/notification',async(req,res)=>{
+  if(!USE_MT || !core) return res.status(404).json({error:'Payment notifications are disabled.'});
   try{
     let n=req.body;
-    if(USE_MT){
-      n=await core.transaction.notification(req.body);
-    }
+    n=await core.transaction.notification(req.body);
     const{order_id,transaction_status,fraud_status,payment_type}=n;
     const ok=(transaction_status==='capture'&&fraud_status==='accept')||transaction_status==='settlement';
     const isPackage=order_id&&order_id.startsWith('AVAIA-PKG-');
@@ -1699,6 +1768,8 @@ app.post('/api/payment/notification',async(req,res)=>{
 });
 
 app.post('/api/payment/simulate',async(req,res)=>{
+  if(USE_MT || !ALLOW_PAYMENT_SIMULATION)
+    return res.status(404).json({error:'Payment simulation is disabled.'});
   const{orderId}=req.body;
   if(!orderId) return res.status(400).json({error:'orderId required'});
   try{const b=await confirmBooking(orderId,'simulated'); res.json({ok:true,booking:b});}
@@ -1737,6 +1808,41 @@ async function activelyConfirmWithMidtrans(orderId, isPackage){
   return { confirmed:false, cancelled:false, record:null };
 }
 
+const PENDING_PAYMENT_MAX_AGE_MS = 24*60*60*1000;
+
+// Repair rows left by older cancellation paths. The compare-and-swap update
+// makes this safe when a webhook, browser poll and background sweep overlap.
+async function repairStalePendingBookingReservations(){
+  if(!USE_SB) return 0;
+  const {data:rows,error}=await supabase.from('pending_bookings')
+    .select('id,schedule_id,status,slot_reserved,slot_released,created_at')
+    .eq('slot_reserved',true).eq('slot_released',false);
+  if(error) throw new Error('Unable to inspect stale booking reservations: '+error.message);
+  let repaired=0;
+  for(const row of (rows||[])){
+    const cancelled=String(row.status||'').startsWith('cancelled_');
+    if(!cancelled) continue;
+    const {data:claim,error:claimErr}=await supabase.from('pending_bookings')
+      .update({slot_released:true,status:row.status})
+      .eq('id',row.id).eq('slot_released',false).select('id').maybeSingle();
+    if(claimErr) throw new Error('Unable to claim stale booking reservation: '+claimErr.message);
+    if(!claim) continue;
+    if(row.schedule_id) await releaseScheduleSlot(row.schedule_id);
+    repaired++;
+  }
+  return repaired;
+}
+
+async function expireUnpaidPendingIfAged(orderId,isPackage,createdAt,result){
+  if(!result || result.confirmed || result.cancelled || !createdAt) return result;
+  const age=Date.now()-new Date(createdAt).getTime();
+  if(!Number.isFinite(age) || age<PENDING_PAYMENT_MAX_AGE_MS) return result;
+  const record=isPackage
+    ? await cancelPackagePurchase(orderId,'expire')
+    : await cancelBooking(orderId,'expire');
+  return {confirmed:false,cancelled:true,expiredByAge:true,record};
+}
+
 app.get('/api/payment/status/:orderId',async(req,res)=>{
   if(!USE_SB) return res.status(503).json({error:'Supabase is required.'});
   const orderId=req.params.orderId;
@@ -1753,7 +1859,7 @@ app.get('/api/payment/status/:orderId',async(req,res)=>{
 
     if(!String(pendingPkg.status||'').startsWith('cancelled_')){
       try{
-        const result=await activelyConfirmWithMidtrans(orderId, true);
+        const result=await expireUnpaidPendingIfAged(orderId,true,pendingPkg.created_at,await activelyConfirmWithMidtrans(orderId, true));
         if(result?.confirmed) return res.json({status:'active',package:result.record});
         if(result?.cancelled) return res.json({status:result.record?.status||'cancelled',package:result.record||pendingPkg});
       }catch(e){
@@ -1773,7 +1879,7 @@ app.get('/api/payment/status/:orderId',async(req,res)=>{
 
   if(!String(pendingBooking.status||'').startsWith('cancelled_')){
     try{
-      const result=await activelyConfirmWithMidtrans(orderId, false);
+      const result=await expireUnpaidPendingIfAged(orderId,false,pendingBooking.created_at,await activelyConfirmWithMidtrans(orderId, false));
       if(result?.confirmed) return res.json({status:result.record.status,booking:result.record});
       if(result?.cancelled) return res.json({status:result.record?.status||'cancelled',booking:result.record||pendingBooking});
     }catch(e){
@@ -1803,20 +1909,21 @@ async function reconcileAllPendingPayments(minAgeMs=0){
   const cutoff=new Date(Date.now()-minAgeMs).toISOString();
   const results=[];
   let confirmed=0, cancelled=0, stillPending=0, failed=0;
+  const repairedSlots=await repairStalePendingBookingReservations();
 
   const {data:pendingPkgs,error:pkgErr}=await supabase
     .from('pending_package_purchases').select('id,member_name,package_name,created_at,status')
-    .not('status','ilike','cancelled_%').lte('created_at',cutoff);
+    .not('status','ilike','cancelled%').lte('created_at',cutoff);
   if(pkgErr) throw new Error('Unable to list pending memberships: '+pkgErr.message);
 
   const {data:pendingBks,error:bkErr}=await supabase
     .from('pending_bookings').select('id,name,class,created_at,status')
-    .not('status','ilike','cancelled_%').lte('created_at',cutoff);
+    .not('status','ilike','cancelled%').lte('created_at',cutoff);
   if(bkErr) throw new Error('Unable to list pending bookings: '+bkErr.message);
 
   for(const p of (pendingPkgs||[])){
     try{
-      const r=await activelyConfirmWithMidtrans(p.id,true);
+      const r=await expireUnpaidPendingIfAged(p.id,true,p.created_at,await activelyConfirmWithMidtrans(p.id,true));
       if(r?.confirmed){ confirmed++; results.push({id:p.id,type:'membership',who:p.member_name,what:p.package_name,outcome:'confirmed'}); }
       else if(r?.cancelled){ cancelled++; results.push({id:p.id,type:'membership',who:p.member_name,what:p.package_name,outcome:'cancelled'}); }
       else { stillPending++; results.push({id:p.id,type:'membership',who:p.member_name,what:p.package_name,outcome:'still_pending'}); }
@@ -1827,7 +1934,7 @@ async function reconcileAllPendingPayments(minAgeMs=0){
 
   for(const b of (pendingBks||[])){
     try{
-      const r=await activelyConfirmWithMidtrans(b.id,false);
+      const r=await expireUnpaidPendingIfAged(b.id,false,b.created_at,await activelyConfirmWithMidtrans(b.id,false));
       if(r?.confirmed){ confirmed++; results.push({id:b.id,type:'booking',who:b.name,what:b.class,outcome:'confirmed'}); }
       else if(r?.cancelled){ cancelled++; results.push({id:b.id,type:'booking',who:b.name,what:b.class,outcome:'cancelled'}); }
       else { stillPending++; results.push({id:b.id,type:'booking',who:b.name,what:b.class,outcome:'still_pending'}); }
@@ -1836,7 +1943,7 @@ async function reconcileAllPendingPayments(minAgeMs=0){
     }
   }
 
-  return { scanned:(pendingPkgs||[]).length+(pendingBks||[]).length, confirmed, cancelled, stillPending, failed, results };
+  return { scanned:(pendingPkgs||[]).length+(pendingBks||[]).length, confirmed, cancelled, stillPending, failed, repairedSlots, results };
 }
 
 app.post('/api/admin/reconcile-pending',requireAdmin,async(req,res)=>{
@@ -1866,20 +1973,36 @@ app.post('/api/membership-purchase/create',requireMember,async(req,res)=>{
     return res.status(409).json({error:'This membership package is not configured with a valid price and credit period.'});
 
   const orderId='AVAIA-PKG-'+Date.now()+'-'+Math.random().toString(36).slice(2,6).toUpperCase();
+  // A double-click/retry within the same 15-minute checkout window must not
+  // create several pending membership orders. A later, intentional purchase
+  // gets a new time bucket and remains possible.
+  const requestFingerprint=crypto.createHash('sha256').update([
+    memberId, pkg.id, packagePrice, packageCredits, packageValidity,
+    Math.floor(Date.now()/(15*60*1000))
+  ].join('|')).digest('hex');
   const pending={
     id:orderId, member_id:memberId||null, member_email:memberEmail, member_name:memberName||'',
     member_phone:memberPhone||'', package_id:pkg.id, package_name:pkg.name,
     price:packagePrice, credits_total:packageCredits, validity_days:packageValidity,
-    status:'pending', created_at:new Date().toISOString(),
+    request_fingerprint:requestFingerprint, status:'pending', created_at:new Date().toISOString(),
   };
   if(USE_SB){
     const {error:pendingErr}=await supabase.from('pending_package_purchases').insert(pending);
-    if(pendingErr) return res.status(500).json({error:'Unable to create the membership payment transaction.'});
+    if(pendingErr){
+      if(pendingErr.code==='23505') return res.status(409).json({error:'A membership payment for this package is already pending. Please finish or wait for it to expire.'});
+      return res.status(500).json({error:'Unable to create the membership payment transaction.'});
+    }
   } else {
     unreachableLocalStoreRead();
   }
 
-  if(!USE_MT) return res.json({ok:true,orderId,token:null,simulated:true});
+  if(!USE_MT){
+    if(!ALLOW_PAYMENT_SIMULATION){
+      await cancelPackagePurchase(orderId,'payment_unconfigured');
+      return res.status(503).json({error:'Payment gateway is not configured.'});
+    }
+    return res.json({ok:true,orderId,token:null,simulated:true});
+  }
 
   try{
     const param={
@@ -1906,6 +2029,8 @@ app.post('/api/membership-purchase/create',requireMember,async(req,res)=>{
 });
 
 app.post('/api/membership-purchase/simulate',async(req,res)=>{
+  if(USE_MT || !ALLOW_PAYMENT_SIMULATION)
+    return res.status(404).json({error:'Payment simulation is disabled.'});
   const{orderId}=req.body;
   if(!orderId) return res.status(400).json({error:'orderId required'});
   try{const p=await confirmPackagePurchase(orderId,'simulated'); res.json({ok:true,package:p});}
@@ -2870,6 +2995,12 @@ async function startServer(){
   if(!USE_SB || !supabase){
     throw new Error('Supabase is required. Check SUPABASE_URL and SUPABASE_SECRET_KEY.');
   }
+  if(process.env.NODE_ENV==='production' && JWT_SECRET_IS_DEFAULT){
+    throw new Error('JWT_SECRET must be set in production; refusing to start with the development fallback.');
+  }
+  if(process.env.NODE_ENV==='production' && ALLOWED_ORIGIN==='*'){
+    throw new Error('ALLOWED_ORIGIN must be restricted in production; refusing wildcard credentialed CORS.');
+  }
 
   const result = await fetchSettingsRow();
   if(result.error){
@@ -2893,6 +3024,13 @@ async function startServer(){
     console.log(`   Realtime: Polling (every few seconds)`);
     console.log(`   Admin:    http://localhost:${PORT}/admin\n`);
   });
+
+  // Repair cancelled rows left with slot_released=false before any new
+  // checkout can observe the stale reservation. This is a data repair only;
+  // still-pending payments remain untouched until Midtrans is checked.
+  repairStalePendingBookingReservations()
+    .then(n=>{ if(n) console.log(`[startup-repair] released ${n} stale cancelled booking reservation(s)`); })
+    .catch(e=>console.error('[startup-repair] failed:',e.message));
 
   // ── Automatic pending-payment sweep ──────────────────────────────
   // Fixes the case where a customer (often a guest paying via GoPay/QRIS on
