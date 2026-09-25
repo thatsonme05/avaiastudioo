@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Payment Pending — Avaia Studio</title>
+  <link rel="stylesheet" href="/css/global.css">
+  <style>
+    @keyframes pp-spin{to{transform:rotate(360deg)}}
+    .pp-spinner{width:72px;height:72px;border:2px solid var(--ln,#DDD5CA);border-top-color:var(--a,#a9772f);border-radius:50%;margin:0 auto 24px;animation:pp-spin .8s linear infinite}
+    .pp-icon{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 24px}
+  </style>
+</head>
+<body style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg)">
+  <div style="text-align:center;padding:40px 24px;max-width:480px">
+    <div id="pp-visual"><div class="pp-spinner"></div></div>
+    <h1 style="font-family:var(--fd);font-size:32px;font-weight:600;margin-bottom:12px" id="pp-title">Waiting for your payment…</h1>
+    <p style="color:var(--mt);font-size:15px;line-height:1.8;margin-bottom:8px" id="pp-msg">Checking whether your transfer has arrived yet.</p>
+    <p style="color:var(--mt);font-size:13px;margin-bottom:32px" id="pp-order"></p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap" id="pp-actions"></div>
+  </div>
+  <script>
+    const params  = new URLSearchParams(window.location.search);
+    const orderId = params.get('order_id') || params.get('orderId');
+    const isLoggedIn = !!localStorage.getItem('avaia_member_token');
+
+    const visualEl  = document.getElementById('pp-visual');
+    const titleEl   = document.getElementById('pp-title');
+    const msgEl     = document.getElementById('pp-msg');
+    const orderEl   = document.getElementById('pp-order');
+    const actionsEl = document.getElementById('pp-actions');
+
+    if (orderId) orderEl.textContent = 'Order ID: ' + orderId;
+
+    function showIcon(kind){ // 'spin' | 'ok' | 'warn' | 'fail'
+      if (kind === 'spin') { visualEl.innerHTML = '<div class="pp-spinner"></div>'; return; }
+      const stroke = kind==='ok' ? '#4a7a48' : kind==='warn' ? '#a9772f' : '#a33d3d';
+      const border = kind==='ok' ? 'var(--ok,#4a7a48)' : kind==='warn' ? '#a9772f' : '#a33d3d';
+      const path = kind==='ok'
+        ? '<polyline points="20 6 9 17 4 12"/>'
+        : kind==='warn'
+        ? '<line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="16.5" x2="12" y2="16.6"/>'
+        : '<line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/>';
+      visualEl.innerHTML = `<div class="pp-icon" style="border:2px solid ${border}">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="${stroke}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${path}</svg>
+      </div>`;
+    }
+
+    function renderActions(buttons){
+      actionsEl.innerHTML = buttons.map(b => `<a href="${b.href}" class="btn ${b.cls}">${b.label}</a>`).join('');
+    }
+
+    // Guests never had an account to log into — sending them to /dashboard
+    // is a dead end, so give them somewhere that actually works instead.
+    function homeOrDashboardAction(){
+      return isLoggedIn
+        ? {href:'/dashboard', cls:'bp', label:'View Dashboard'}
+        : {href:'/schedule',  cls:'bp', label:'Back to Schedule'};
+    }
+
+    function fmtDate(iso){
+      try{ return new Date(iso).toLocaleDateString('en-US',{day:'numeric',month:'long',year:'numeric'}); }
+      catch(e){ return ''; }
+    }
+
+    function renderSuccess(payload){
+      showIcon('ok');
+      if (payload.package) {
+        const p = payload.package;
+        titleEl.textContent = 'Membership Active!';
+        msgEl.textContent = `${p.package_name} is now active — ${p.credits_total} class credit${p.credits_total===1?'':'s'}, valid until ${fmtDate(p.expires_at)}.`;
+      } else if (payload.booking) {
+        const b = payload.booking;
+        titleEl.textContent = 'Booking Confirmed!';
+        msgEl.textContent = `Your transfer arrived — you're booked for ${b.class||'your class'}${b.date?' on '+b.date:''}${b.time?' at '+b.time:''}.`;
+      } else {
+        titleEl.textContent = 'Payment Successful!';
+        msgEl.textContent = 'Your payment has been confirmed.';
+      }
+      renderActions([ homeOrDashboardAction(), {href:'/schedule', cls:'bo', label:'Book Another Class'} ]);
+    }
+
+    function renderStillWaiting(){
+      showIcon('warn');
+      titleEl.textContent = 'Still Waiting for Your Transfer';
+      msgEl.textContent = "We haven't seen your payment arrive yet. You have 24 hours to complete the bank transfer — you don't need to keep this tab open, we'll email your confirmation the moment it comes in.";
+      renderActions([ {href:window.location.href, cls:'bp', label:'Check Again'}, homeOrDashboardAction() ]);
+    }
+
+    function renderCancelled(){
+      showIcon('fail');
+      titleEl.textContent = 'Payment Not Completed';
+      msgEl.textContent = 'This payment was cancelled, denied, or expired before it was completed. No charge should have been made — please try again.';
+      renderActions([ {href:'/pricing', cls:'bp', label:'Back to Pricing'}, {href:'/schedule', cls:'bo', label:'Back to Schedule'} ]);
+    }
+
+    function renderNotFound(){
+      showIcon('warn');
+      titleEl.textContent = "Couldn't Find This Payment";
+      msgEl.textContent = orderId ? "We couldn't find a matching transaction for this order." : 'No order was specified.';
+      renderActions([ homeOrDashboardAction(), {href:'/', cls:'bo', label:'Back Home'} ]);
+    }
+
+    function renderCheckFailed(){
+      showIcon('warn');
+      titleEl.textContent = "Couldn't Check Right Now";
+      msgEl.textContent = "We couldn't reach the payment provider just now. If you already transferred, it will still be picked up automatically — try checking again in a moment.";
+      renderActions([ {href:window.location.href, cls:'bp', label:'Try Again'}, homeOrDashboardAction() ]);
+    }
+
+    async function checkStatus(){
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
+      try{
+        const r = await fetch('/api/payment/status/' + encodeURIComponent(orderId), {signal:controller.signal});
+        if (r.status === 404) return { notFound:true };
+        if (!r.ok) throw new Error('status check failed: ' + r.status);
+        return await r.json();
+      }finally{
+        clearTimeout(timeout);
+      }
+    }
+
+    const ACTIVE_STATES    = ['active','confirmed'];
+    const CANCELLED_PREFIX = 'cancelled_';
+
+    // Bank transfer/VA can legitimately take much longer than QRIS (up to
+    // the full 24h window), so unlike /payment/finish this polls a handful
+    // of times and then settles into an honest "still waiting" state rather
+    // than looking broken — the customer is free to close the tab either
+    // way, since the webhook + automatic background sweep will finalize the
+    // booking later regardless of whether this page is open.
+    async function poll(attempt){
+      try{
+        const data = await checkStatus();
+        if (data.notFound) return renderNotFound();
+
+        if (ACTIVE_STATES.includes(data.status)) return renderSuccess(data);
+        if (String(data.status||'').startsWith(CANCELLED_PREFIX) || data.status==='deny' || data.status==='expire') return renderCancelled();
+
+        if (attempt < 4) { setTimeout(() => poll(attempt+1), 3000); return; }
+        renderStillWaiting();
+      }catch(e){
+        if (attempt < 2) { setTimeout(() => poll(attempt+1), 2000); return; }
+        renderCheckFailed();
+      }
+    }
+
+    if (!orderId) { renderNotFound(); } else { poll(0); }
+  </script>
+</body>
+</html>
