@@ -1,0 +1,12 @@
+/* classes.css */
+.cls-wrap   { padding:48px 60px 80px; }
+.cls-filter { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:32px; }
+.fbtn { font-size:11px; font-weight:500; letter-spacing:.08em; text-transform:uppercase; padding:8px 18px; border:1px solid var(--ln); background:none; color:var(--mt); cursor:pointer; transition:all .18s; }
+.fbtn.active,.fbtn:hover { background:var(--p); color:#fff; border-color:var(--p); }
+.cls-grid2  { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--ln); }
+.cls-card2  { background:var(--wh); padding:32px; transition:background .18s; }
+.cls-card2:hover { background:var(--bg); }
+.cls-tag2   { font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--a); margin-bottom:8px; }
+.cls-ft2    { margin-top:20px; padding-top:16px; border-top:1px solid var(--ln); display:flex; justify-content:space-between; align-items:center; }
+@media(max-width:1024px){ .cls-grid2{grid-template-columns:repeat(2,1fr);} }
+@media(max-width:768px){ .cls-wrap{padding:28px 16px 60px;} .cls-grid2{grid-template-columns:1fr;} }

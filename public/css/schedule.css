@@ -1,0 +1,95 @@
+/* schedule.css */
+.sch-wrap { padding: 36px 60px 80px; }
+
+.sch-top {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; margin-bottom: 28px;
+  flex-wrap: wrap; gap: 16px;
+}
+.sch-clock { text-align: right; }
+.sch-date  { font-family:var(--fd); font-size:36px; font-weight:600; color:var(--p); line-height:1; }
+.sch-day   { font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--mt); margin-top:5px; }
+.sch-time  { font-size:13px; color:var(--a); margin-top:4px; font-variant-numeric:tabular-nums; }
+
+/* ── SLIDING DATE STRIP ── */
+.sch-slider { margin-bottom: 24px; }
+.sch-slider-title {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--fd); font-size: 22px; font-weight: 600; color: var(--s);
+  margin-bottom: 16px;
+}
+.sch-slider-title svg { color: var(--s); flex-shrink: 0; }
+
+.sch-strip-row { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+.sch-strip-nav {
+  flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%;
+  border: 1px solid var(--s); background: var(--wh); color: var(--s);
+  font-size: 18px; line-height: 1; display: flex; align-items: center; justify-content: center;
+  transition: all .15s;
+}
+.sch-strip-nav:hover { background: var(--s); color: #fff; }
+
+.sch-strip {
+  display: flex; gap: 6px; overflow-x: auto; scroll-behavior: smooth;
+  scrollbar-width: none; padding: 2px;
+}
+.sch-strip::-webkit-scrollbar { display: none; }
+.sch-strip-cell {
+  flex-shrink: 0; width: 64px; padding: 12px 0;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  background: none; border: 1px solid transparent; border-radius: 10px;
+  cursor: pointer; transition: all .15s;
+}
+.sch-strip-cell:not(.past):hover { background: var(--bg); border-color: var(--ln); }
+.sch-strip-dow { font-size: 11px; font-weight: 500; letter-spacing: .05em; color: var(--mt); }
+.sch-strip-num { font-family: var(--fd); font-size: 20px; font-weight: 700; color: var(--s); }
+.sch-strip-cell.today { border-color: var(--ln); }
+.sch-strip-cell.past { opacity: .35; cursor: default; }
+.sch-strip-cell.selected { background: var(--s); border-color: var(--s); }
+.sch-strip-cell.selected .sch-strip-dow,
+.sch-strip-cell.selected .sch-strip-num { color: #fff; }
+
+.sch-filters { display: flex; flex-wrap: wrap; gap: 10px; }
+.sch-filter {
+  flex: 1 1 180px; min-width: 150px;
+  border: 1px solid var(--ln); background: var(--wh);
+  padding: 12px 14px; font-family: var(--fb); font-size: 14px; color: var(--s);
+  cursor: pointer;
+}
+.sch-filter:focus { outline: none; border-color: var(--p); }
+
+.sch-tbl  { width:100%; border-collapse:collapse; background:var(--wh); }
+.sch-tbl thead tr { border-bottom:1px solid var(--ln); background:var(--bg); }
+.sch-tbl th {
+  text-align:left; padding:11px 18px;
+  font-size:11px; font-weight:500; letter-spacing:.1em; text-transform:uppercase; color:var(--mt);
+}
+.sch-tbl td { padding:16px 18px; border-bottom:1px solid var(--ln); vertical-align:middle; }
+.sch-tbl tbody tr:hover td { background:var(--bg); }
+
+.sch-date-cell { font-weight:500; font-size:13px; color:var(--mt); white-space:nowrap; }
+.sch-time-cell { font-weight:600; font-size:15px; white-space:nowrap; }
+.sch-name { font-family:var(--fd); font-size:19px; font-weight:600; }
+.sch-inst { font-size:12px; color:var(--mt); margin-top:2px; }
+.sch-slots { font-size:13px; color:var(--mt); }
+.sch-slots.low  { color:var(--a); font-weight:500; }
+.sch-slots.full { color:var(--mt); opacity:.6; }
+.sch-btn:disabled { opacity:.35; cursor:default; }
+
+@media(max-width:1024px){
+  .sch-wrap { padding:28px 24px 60px; }
+  .sch-tbl th:nth-child(4),.sch-tbl td:nth-child(4) { display:none; }
+}
+@media(max-width:768px){
+  .sch-wrap { padding:20px 16px 60px; }
+  .sch-top  { flex-direction:column; }
+  .sch-clock { text-align:left; }
+  .sch-tbl th:nth-child(5),.sch-tbl td:nth-child(5) { display:none; }
+  .sch-strip-cell { width: 52px; }
+  .sch-slider-title { font-size: 18px; }
+}
+
+.sch-price { font-weight: 600; color: var(--p); font-size: 14px; }
+@media(max-width:768px){
+  .sch-tbl th:nth-child(6),.sch-tbl td:nth-child(6){display:none;}
+}
