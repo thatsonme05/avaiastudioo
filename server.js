@@ -261,13 +261,6 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname,'public')));
-// Case- and whitespace-insensitive email comparison. Emails typed by a
-// guest at booking time (no account yet) are stored exactly as typed, while
-// a member's own email is always normalized (trim + lowercase) at
-// registration/login — so a guest booking and that same person's later
-// member account can differ only in casing/whitespace and still be the same
-// person. Every place that decides "is this booking/invoice theirs?" must
-// compare through this, not a raw ===, or it silently hides real matches.
 function emailsMatch(a,b){
   return !!a && !!b && String(a).trim().toLowerCase()===String(b).trim().toLowerCase();
 }
@@ -276,13 +269,6 @@ function parsePositiveInteger(value){
   const n=typeof value==='number' ? value : Number(String(value ?? '').trim());
   return Number.isSafeInteger(n) && n>0 ? n : null;
 }
-
-// Catches exactly the malformed contact info that was silently reaching
-// Midtrans and getting the whole checkout rejected with no clear reason
-// shown to the guest — e.g. "name@gmail." (no TLD after the last dot) or
-// "name91yahoo.com" (missing the "@" entirely). Deliberately loose beyond
-// that: this only needs to reject what would fail at Midtrans anyway, not
-// validate email/phone the way a signup form would.
 function isValidEmailFormat(email){
   return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(email||'').trim());
 }
@@ -452,9 +438,6 @@ function getSoftMemberAuth(req){
 app.get('/api/status',(req,res)=>res.json({
   supabase:USE_SB, midtrans:USE_MT,
   midtransEnv:MT_ENV, midtransClientKey:MT_CLIENT||null,
-  // This endpoint is public because the booking pages need the Midtrans
-  // client key. Do not expose EMAIL_USER (or any other server credential /
-  // account identifier) in a public health response.
   email:USE_EMAIL
 }));
 const APP_BUILD_ID = 'member-login-deterministic-20260824-01';
@@ -1050,16 +1033,8 @@ app.post('/api/auth/forgot-password', authLimiter, async(req,res)=>{
       .limit(2);
     if(findErr){
       console.error('forgot-password lookup error:', findErr.message);
-      // Still don't leak anything specific to the client, but don't pretend
-      // this worked either — a broken DB connection is worth a real 500 so
-      // the admin notices, rather than a silent no-op "email sent".
       return res.status(500).json({error:mapMemberAuthDbError(findErr) || ('Cannot access the member account table: '+findErr.message)});
     }
-
-    // Zero matches, more than one match (ambiguous), or an inactive account:
-    // in every case, respond exactly like a normal request and do nothing
-    // else. This is what keeps the endpoint from being usable to check which
-    // emails are registered.
     const member = (matches||[]).length===1 ? matches[0] : null;
     if(!member || member.status==='inactive') return res.json(genericReply);
 
@@ -1069,10 +1044,6 @@ app.post('/api/auth/forgot-password', authLimiter, async(req,res)=>{
       .from('members')
       .update({
         reset_token_hash: hashResetToken(rawToken),
-        // 60 minutes (not 30) — a member has to actually receive the email
-        // before they can click it, and any delay in delivery (spam
-        // filtering, a slow SMTP relay) eats directly into whatever window
-        // is set here, so a longer window is more forgiving of that.
         reset_token_expires: computedExpiresAt,
       })
       .eq('id', member.id)
@@ -1081,10 +1052,6 @@ app.post('/api/auth/forgot-password', authLimiter, async(req,res)=>{
       console.error('forgot-password token save error:', updateErr.message);
       return res.status(500).json({error:mapMemberAuthDbError(updateErr) || ('Could not start password reset: '+updateErr.message)});
     }
-    // Diagnostic for the "fresh link shows expired" report: log what we
-    // intended to store vs. what Supabase actually reports back right after
-    // the write. If these ever disagree, that mismatch — not the comparison
-    // logic in reset-password — is the bug, and this line proves it.
     console.log('forgot-password: reset_token_expires computed =', computedExpiresAt, '| read back from DB =', savedRow?.reset_token_expires, 'for member', member.id);
 
     const resetUrl = `${req.protocol}://${req.get('host')}/reset-password?token=${rawToken}`;
@@ -1093,10 +1060,6 @@ app.post('/api/auth/forgot-password', authLimiter, async(req,res)=>{
 
     const mailResult = await sendMail({ to: member.email, ...emailPasswordReset(member, resetUrl, studioName) });
     if(!mailResult.ok){
-      // The token is saved either way, so the link still works if the admin
-      // hands it to the member manually — but flag this loudly, because a
-      // silent "email sent" when email isn't configured leaves the member
-      // stuck with no way to actually get the link.
       console.warn(`forgot-password: could not email ${member.email} (${mailResult.reason}). Reset link: ${resetUrl}`);
     }
 
@@ -1130,15 +1093,6 @@ app.post('/api/auth/reset-password', authLimiter, async(req,res)=>{
     }
     if(!member)
       return res.status(400).json({error:'This password reset link is invalid. It may have already been used, or a newer reset link may have been requested since — please request a new one.'});
-
-    // BUGFIX/HARDENING: a report came in of a freshly-requested link (a few
-    // minutes old) immediately showing "expired". The generation and
-    // comparison logic read correctly in isolation, so this switches to an
-    // explicit epoch-millisecond comparison (safe against any string-format
-    // quirk in what Postgres/PostgREST hands back for a timestamptz) and
-    // logs the actual values whenever a token is rejected as expired or
-    // unparseable, so a recurrence is provable from the server log instead
-    // of guesswork — check for a "reset-password expiry check:" line.
     const expiresAtMs = member.reset_token_expires ? new Date(member.reset_token_expires).getTime() : NaN;
     const nowMs = Date.now();
     if(!member.reset_token_expires || Number.isNaN(expiresAtMs)){
@@ -1790,16 +1744,9 @@ app.post('/api/payment/create',paymentCreateLimiter,async(req,res)=>{
     bookingData.date = requestedIso === iso ? requestedDate : new Date(iso+'T00:00:00').toLocaleDateString('en-US',{day:'numeric',month:'long',year:'numeric'});
     bookingData.time = scheduleRow.time;
   }else{
-    // Supabase is required in production, but keep the non-Supabase branch
-    // deterministic for local diagnostics: only here may the legacy client
-    // amount be used, and it still must be a positive integer.
     amount=parsePositiveInteger(req.body?.amount);
     if(!amount) return res.status(400).json({error:'A valid booking price is required.'});
   }
-  // Booking order IDs are UUIDs so they remain valid even if a production database
-  // still has a legacy UUID primary key on bookings.id or pending_bookings.id.
-  // Midtrans accepts UUID order IDs, and booking/package flows already distinguish
-  // packages using the AVAIA-PKG- prefix, so bookings do not need a readable prefix.
   const orderId=uuidv4();
 
   const verifiedMember = getSoftMemberAuth(req);
@@ -2078,23 +2025,6 @@ app.get('/api/payment/status/:orderId',paymentStatusLimiter,async(req,res)=>{
   }
   res.json({status:pendingBooking.status,booking:publicBookingPayment(pendingBooking)});
 });
-
-// Sweeps every still-pending payment (bookings + membership packages) and
-// asks Midtrans directly what really happened to it — for payments made
-// while the webhook/confirmation flow had bugs (now fixed), the money may
-// have been captured by Midtrans even though our side never finished the
-// job. Reuses the exact same verified-confirm path as the live payment
-// flow, so a record can only be completed here if Midtrans itself reports
-// it as paid — this cannot be used to grant an unpaid booking/membership.
-// Shared by both the manual "Check Pending Payments" admin button and the
-// automatic background sweep below. Re-checks every still-pending booking /
-// membership payment directly with Midtrans and finalizes any that were
-// actually paid — this is what fixes the case where a customer (especially
-// a guest paying via GoPay/QRIS on mobile) completes payment but the
-// webhook never reaches the server and the browser tab never comes back to
-// /payment/finish to trigger the client-side check either. `minAgeMs` skips
-// anything created too recently so we don't hammer Midtrans's API for a
-// checkout the customer may still be actively completing.
 async function reconcileAllPendingPayments(minAgeMs=0){
   const cutoff=new Date(Date.now()-minAgeMs).toISOString();
   const results=[];
@@ -2165,9 +2095,6 @@ app.post('/api/membership-purchase/create',requireMember,async(req,res)=>{
     return res.status(409).json({error:'This membership package is not configured with a valid price and credit period.'});
 
   const orderId='AVAIA-PKG-'+Date.now()+'-'+Math.random().toString(36).slice(2,6).toUpperCase();
-  // A double-click/retry within the same 15-minute checkout window must not
-  // create several pending membership orders. A later, intentional purchase
-  // gets a new time bucket and remains possible.
   const requestFingerprint=crypto.createHash('sha256').update([
     memberId, pkg.id, packagePrice, packageCredits, packageValidity,
     Math.floor(Date.now()/(15*60*1000))
@@ -2407,11 +2334,6 @@ app.post('/api/member-packages/manual',requireAdmin,async(req,res)=>{
     res.status(500).json({error:e.message});
   }
 });
-// Full edit of an already-assigned membership — previously the only way to
-// correct one was the ±1 credit buttons, which couldn't fix a wrong expiry
-// date, package name, price, or payment method, or move more than 1 credit
-// at a time. This lets an admin edit every field directly, whether the
-// membership came from a real Midtrans purchase or a manual grant above.
 app.put('/api/member-packages/:id',requireAdmin,async(req,res)=>{
   if(!USE_SB) return res.status(503).json({error:'Supabase is required.'});
   try{
@@ -2494,8 +2416,6 @@ async function getMemberPackages(memberId, email){
     .map(p=>({...p,computed_status:computePkgStatus(p)}))
     .sort((a,b)=>new Date(a.expires_at)-new Date(b.expires_at));
 }
-
-// Returns the active package that expires soonest (use-it-or-lose-it order), or null.
 async function getActivePackage(memberId, email){
   if(!memberId && !email) return null;
   const pkgs = await getMemberPackages(memberId, email);
@@ -2610,7 +2530,6 @@ async function confirmBooking(orderId,paymentType,memberPackageId=null){
   delete confirmed.slot_released;
 
   if(memberPackageId) confirmed.member_package_id=memberPackageId;
-
   const {data:inserted,error:insertErr}=await supabase
     .from('bookings').insert(confirmed).select('*').single();
 
@@ -2762,26 +2681,6 @@ async function confirmPackagePurchase(orderId,paymentType){
   const now=new Date();
   const expires=new Date(now.getTime()+(pending.validity_days||30)*24*60*60*1000);
   const purchased={
-    // BUGFIX (serious): this used to be a random uuidv4(), which is exactly
-    // why the exact same purchase could end up as many duplicate rows in
-    // member_packages — sometimes a dozen or more for one real order. The
-    // Midtrans webhook, a customer's browser polling /api/payment/status,
-    // and the background reconcile sweep can all try to confirm the SAME
-    // orderId within moments of each other; the `existing` check above is a
-    // plain read-then-act, so several overlapping calls can all see
-    // existing=null (none has inserted yet) and all reach this insert. With
-    // a random id every time, every one of them succeeded, each creating
-    // its own full, separate, real credits_total/credits_used package —
-    // which is how one purchase turned into 4, 13, even 23 active packages
-    // for the same member, with credits scattered unpredictably across all
-    // of them as bookings redeemed from whichever happened to expire
-    // soonest.
-    // Fix: derive the id deterministically from orderId (same input →
-    // always the exact same UUID), so every one of those overlapping insert
-    // attempts targets the identical primary key. Only the first can ever
-    // succeed; every other one fails on the primary key itself and falls
-    // through to the race-recovery read below — no matter how many times it
-    // happens, or whether any secondary unique index is present.
     id:uuidv5(orderId,MEMBER_PACKAGE_ID_NAMESPACE),
     payment_order_id:orderId,
     member_id:pending.member_id,
@@ -2886,24 +2785,10 @@ app.delete('/api/my-bookings/:id',requireMember,async(req,res)=>{
     const parts=booking.date.split(' ');
     const [h,m]=(booking.time||'00.00').split('.').map(Number);
     const classTime=new Date(parseInt(parts[2]),MONTHS[parts[1]],parseInt(parts[0]),h||0,m||0);
-    if(new Date()>new Date(classTime.getTime()-2*60*60*1000))
-      return res.status(400).json({error:'Cannot cancel less than 2 hours before class. Please contact the studio directly.'});
+    if(new Date()>new Date(classTime.getTime()-8*60*60*1000))
+      return res.status(400).json({error:'Cannot cancel less than 8 hours before class. Please contact the studio directly.'});
   }catch(e){}
   if(USE_SB){
-    // BUGFIX: claim the cancellation atomically instead of updating
-    // unconditionally. A fast double-click on "Cancel", a retried request,
-    // or two open tabs could previously send two overlapping DELETE calls
-    // for the same booking. Both would pass the `status==='cancelled'`
-    // check above (both reads happened before either write landed), then
-    // BOTH would call release_slot and BOTH would refund a package credit
-    // below — silently adding an extra slot back to schedule.slots (this is
-    // how "slots left" can drift up to a nonsensical number over time) and
-    // crediting the member twice for one cancelled class. Conditioning the
-    // UPDATE on the row's *current* status in the database (`.neq('status',
-    // 'cancelled')`), not the copy read a moment earlier, makes only ONE of
-    // the two overlapping calls actually flip it to 'cancelled' — the loser
-    // affects zero rows and is correctly told it's already cancelled,
-    // instead of silently repeating the side effects below.
     const {data:claimed,error:updateErr}=await supabase
       .from('bookings')
       .update({status:'cancelled',cancelled_at:new Date().toISOString()})
@@ -3021,10 +2906,6 @@ app.get('/api/stats/admin',requireAdmin,async(req,res)=>{
   }
   try{
     const stats=buildAdminStats({bookings,members,classes,schedule,memberPackages});
-
-    // ── Optional date-range filter for the "Total Revenue" card ──
-    // Supports ?year=2026, ?year=2026&month=9, or ?from=2026-09-01&to=2026-09-30.
-    // Always counts confirmed bookings + purchased packages only (payment succeeded).
     const {year,month,day,from,to}=req.query;
     let rangeStart=null, rangeEnd=null;
     if(from||to){
