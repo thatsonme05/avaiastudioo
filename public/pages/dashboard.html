@@ -190,7 +190,7 @@ async function loadDash() {
 }
 
 async function cancelMyBooking(id){
-  if(!confirm('Cancel this booking?\n\nNote: bookings cannot be cancelled less than 2 hours before the class.')) return;
+  if(!confirm('Cancel this booking?\n\nNote: bookings cannot be cancelled less than 8 hours before the class.')) return;
   try{
     const r=await fetch(`/api/my-bookings/${id}`,{method:'DELETE'});
     const d=await r.json();
